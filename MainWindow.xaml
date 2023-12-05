@@ -63,7 +63,7 @@
                 <Button Name="CancelChangesButton" Content="Отмена" Width="100" Height="30" Margin="0,75,0,0"
                         ToolTip="Внести изменения" IsEnabled="True" Click="CancelChangesButton_Click" Visibility="Hidden"/>
                 <Button Name="ChangesButton" Content="Изменить" Width="100" Height="30" Margin="0,10,0,0"
-                        ToolTip="Внести изменения" IsEnabled="True" Click="ChangesButton_Click"/>
+                        ToolTip="Внести изменения" IsEnabled="False" Click="ChangesButton_Click"/>
                 <Button Name="AddClientButton" Content="Добавить" Width="100" Height="30" Margin="0,10,0,0"
                         ToolTip="Добавить нового клиента" IsEnabled="False" Click="AddClientButton_Click"/>
                 

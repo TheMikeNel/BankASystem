@@ -64,7 +64,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Client.cs" />
-    <Compile Include="ClientRepository.cs" />
+    <Compile Include="DataRepository.cs" />
     <Compile Include="Employee.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

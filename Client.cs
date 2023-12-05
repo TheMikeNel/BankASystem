@@ -32,7 +32,7 @@ namespace BankASystem
             get => _passport;
             set
             {
-                if (value.Length >= 10 && value.Length < 11)
+                if (value.Length >= 10 && value.Length <= 11)
                 {
                     _passport = value;
                 }
