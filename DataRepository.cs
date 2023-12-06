@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
+using System.Net.Sockets;
 using System.Xml.Serialization;
 
 namespace BankASystem
@@ -18,7 +14,7 @@ namespace BankASystem
 
         private static List<Client> _clientsList = new List<Client>();
 
-        public static List<Client> ClientsList
+        protected static List<Client> ClientsList
         {
             get
             {
@@ -33,7 +29,7 @@ namespace BankASystem
             }
         }
 
-        private static void SerializeClientsList()
+        public static void SerializeClientsList()
         {
             XmlSerializer serializer = new XmlSerializer(typeof(List<Client>));
             StreamWriter sw = new StreamWriter(_xmlPath);
@@ -60,35 +56,47 @@ namespace BankASystem
 
             foreach (Client client in ClientsList)
             {
-                if (client.ToString().Contains(fio) && client.ToString().Contains(phoneNumber))
+                if (client.FIO.ToLower().Contains(fio.ToLower()) && client.PhoneNumber.Contains(phoneNumber))
                     foundClients.Add(client);
             }
             return foundClients;
         }
 
-        protected static void AddClient(Client client)
+        /// <summary>
+        /// Добавление нового клиента.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns>true - если успешно добавлен / falce - если данные повторяются</returns>
+        protected static bool AddClient(Client client)
         {
             if (_isFirstOpen) DeserializeClientsList();
 
-            ClientsList.Add(client);
+            if (TryAddClient(client))
+            {
+                ClientsList.Add(client);
 
-            SerializeClientsList();
+                return true;
+            }
+
+            return false;
         }
 
         protected static bool ChangeClient(Client defaultClient, Client changedClient)
         {
+            // Для изменения данных о клиенте, необходимо найти его в общем списке.
+            // Так как номер телефона, теоретически, не может повторяться, поиск производится по номеру телефона
             int clientInd = ClientsList.FindIndex(x => x.PhoneNumber == defaultClient.PhoneNumber);
 
-            if (clientInd > -1)
+            if (clientInd > -1 && TryChangeClientData(defaultClient, changedClient))
             {
                 // Если изменения вносит консультант (паспортные данные указаны как "**** ******"), паспортные данные не изменяются.
                 if (changedClient.Passport.Contains('*')) changedClient.Passport = ClientsList[clientInd].Passport; 
 
                 ClientsList[clientInd] = changedClient;
-                SerializeClientsList();
+
                 return true;
             }
-            else return false;
+            return false;
         }
 
         protected static bool RemoveClient(Client client)
@@ -103,23 +111,65 @@ namespace BankASystem
             }
             return false;
         }
+
+        /// <summary>
+        /// Проверка на повторение индивидуальных данных при изменении конкретного клиента. 
+        /// </summary>
+        /// <param name="defaultClient"></param>
+        /// <param name="changedClient"></param>
+        /// <returns>falce - если данные повторяются / true - если нет</returns>
+        private static bool TryChangeClientData(Client defaultClient, Client changedClient)
+        {
+            // Сравнение происходит по списку с исключенным defaultClient
+            List<Client> clients = new List<Client>(ClientsList);
+            int clientInd = clients.FindIndex(x => x.PhoneNumber == defaultClient.PhoneNumber);
+
+            if (clientInd > -1) clients.RemoveAt(clientInd);
+            else return true;
+
+            foreach (Client client in clients)
+            {
+                if (changedClient.PhoneNumber == client.PhoneNumber || changedClient.Passport == client.Passport)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Проверка на повторение индивидуальных данных при добавлении конкретного клиента.
+        /// </summary>
+        /// <param name="tClient"></param>
+        /// <returns>falce - если данные повторяются / true - если нет</returns>
+        private static bool TryAddClient(Client tClient)
+        {
+            foreach (Client client in ClientsList)
+            {
+                if (tClient.PhoneNumber == client.PhoneNumber || tClient.Passport == client.Passport)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
-    interface IManagerWorkingWithRepository
+    interface IConsultant
+    {
+        ObservableCollection<Client> GetAllClients();
+        ObservableCollection<Client> FindClients(string fio, string phoneNumber);
+        bool ChangeClient(Client defoultClient, Client changedClient);
+    }
+
+    interface IManager : IConsultant
     {
         string ManagerPassword { get; set; }
 
-        ObservableCollection<Client> GetAllClients();
-        ObservableCollection<Client> FindClients(string fio, string phoneNumber);
-        void AddClient(Client client);
-        bool ChangeClient(Client defoultClient, Client changedClient);
+        bool AddClient(Client client);
         bool RemoveClient(Client client);
     }
 
-    interface IConsultantWorkingWithRepository
-    {
-        ObservableCollection<Client> GetAllClients();
-        ObservableCollection<Client> FindClients(string fio, string phoneNumber);
-        bool ChangeClient(Client defoultClient, Client changedClient);
-    }
 }

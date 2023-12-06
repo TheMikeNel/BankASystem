@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BankASystem"
         mc:Ignorable="d"
-        Title="BankA System" Height="450" Width="800" ResizeMode="NoResize">
+        Title="BankA System" Height="450" Width="800" ResizeMode="NoResize" Closing="Window_Closing">
 
     <Window.Resources>
         <LinearGradientBrush x:Key="MainGradient" EndPoint="0.5,1" StartPoint="0.5,0">
@@ -26,10 +26,12 @@
             <RowDefinition Height="0.1*"/>
         </Grid.RowDefinitions>
 
-        <Button Name="EmployeeButton" Content="Войти как менеджер" Margin="25,5,25,5" 
+        <Button Name="EmployeeButton" Content="Войти как менеджер" Margin="10,5,10,5" 
                 Grid.Row="1" Grid.ColumnSpan="2" Click="Employee_Click"/>
-        <ListBox Name="ClientsListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,197,10,10"
+        <ListBox Name="ClientsListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,200,10,50"
                  SelectionChanged="ClientsListBox_SelectionChanged"/>
+        <Button x:Name="CheckLastChanges" Content="Посмотреть последние изменения" IsEnabled="False" Grid.Column="0" Grid.Row="0"
+                Click="CheckLastChanges_Click" Margin="10, 335, 10, 10" ToolTip="Посмотреть последние внесенные изменения"/>
 
         <GroupBox Header="Поиск клиента" Grid.Column="0" Grid.Row="0" Margin="10,10,10,203">
             <StackPanel>
@@ -57,8 +59,8 @@
 
                 <Label Content="Паспортные данные" HorizontalAlignment="Center" Margin="0" Height="27"/>
                 <TextBox Name="PassportTB" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" 
-                         Text="" Background="{StaticResource DisabledColor}" Width="350" IsReadOnly="True" MaxLength="10"
-                         KeyDown="CheckDigit_KeyDown" ToolTip="Серия и номер паспорта клиента - 10 цифр"/>
+                         Text="" Background="{StaticResource DisabledColor}" Width="350" IsReadOnly="True" MaxLength="11"
+                         KeyDown="CheckDigit_KeyDown" ToolTip="Серия   номер паспорта клиента - 10 цифр"/>
                 
                 <Button Name="CancelChangesButton" Content="Отмена" Width="100" Height="30" Margin="0,75,0,0"
                         ToolTip="Внести изменения" IsEnabled="True" Click="CancelChangesButton_Click" Visibility="Hidden"/>
@@ -70,7 +72,6 @@
 
             </StackPanel>
         </GroupBox>
-
-
+        
     </Grid>
 </Window>

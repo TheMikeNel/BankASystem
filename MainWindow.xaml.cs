@@ -1,20 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Converters;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace BankASystem
 {
@@ -44,13 +34,14 @@ namespace BankASystem
         static string enabledRes = "EnabledRColor";
         static string disabledRes = "DisabledColor";
 
+        // Параметры для взаимодействия с выбранным клиентом
         private Client _selectedClient;
         private int _selectedClientIndex = -1;
 
         private bool _isManager = false;
         private bool _isAddClient = false;
         private bool _isChanges = false;
-        private bool _isCanChanges = false;
+        private bool _clientIsSelected = false;
 
         // Является ли пользователь менеджером. При изменении, вызывает метод SwitchEmployee(bool)
         public bool IsManager
@@ -77,9 +68,11 @@ namespace BankASystem
                 if (_isAddClient != value)
                 {
                     _isAddClient = value;
-                    if (_isAddClient) DeselectClient();
+
+                    if (_isAddClient) DeselectClient(); // Если добавляется новый клиент, необходимо очистить поля ввода данных о клиенте
+
                     AddClientButton.IsEnabled = !_isAddClient;
-                    IsCanChanges = _isAddClient;
+                    ClientIsSelected = _isAddClient;
                     IsChanges = _isAddClient;
                 }
             }
@@ -95,10 +88,13 @@ namespace BankASystem
                 if (_isChanges != value)
                 {
                     _isChanges = value;
+                    CheckLastChanges.IsEnabled = !_isChanges;
+                    ClientsListBox.IsEnabled = !_isChanges;
 
                     if (_isChanges) // Если пользователь вносит новые данные, кнопка "Изменить" принимает функционал кнопки "Сохранить",
                                         // появляется кнопка отмены изменений.
                     {
+                        AddClientButton.IsEnabled = false;
                         CancelChangesButton.Visibility = Visibility.Visible;
                         ChangesButton.Content = "Сохранить";
                     }
@@ -107,25 +103,25 @@ namespace BankASystem
                         CancelChangesButton.Visibility = Visibility.Hidden;
                         ChangesButton.Content = "Изменить";
                     }
-
-                    SwitchClientDataTextBoxes(_isChanges); // Поля данных о клиенте принимают состояния:
-                                                               // Чтение и запись;
-                                                               // Только чтение
+                    // Поля данных о клиенте принимают состояния: Чтение и запись / Только чтение
+                    SwitchClientDataTextBoxes(_isChanges);                                                                                                                            
                 }
             }
         }
 
-        // Может ли пользователь изменять данные о клиенте.
-        public bool IsCanChanges
+        // Выбран ли какой-либо клиент для взаимодействия.
+        public bool ClientIsSelected
         {
-            get => _isCanChanges;
+            get => _clientIsSelected;
             set
             {
-                if ( _isCanChanges != value)
+                if ( _clientIsSelected != value)
                 {
-                    _isCanChanges = value;
+                    _clientIsSelected = value;
 
-                    ChangesButton.IsEnabled = _isCanChanges;
+                    // Может ли пользователь изменять и просматривать данные о клиенте.
+                    ChangesButton.IsEnabled = _clientIsSelected;
+                    CheckLastChanges.IsEnabled = _clientIsSelected;
                 }
             }
         }
@@ -156,21 +152,28 @@ namespace BankASystem
         {
             IsAddClient = false;
             IsChanges = false;
-            SelectClient(_selectedClient);
+            SelectClient(_selectedClientIndex);
         }
 
         // Кнопка "Добавить".
         private void AddClientButton_Click(object sender, RoutedEventArgs e) 
         {
-            IsAddClient = true;
+            if (employee is Manager)
+                IsAddClient = true;
         }
 
         // Кнопка "Поиск" (Поиск сотрудников по ФИО и номеру)
         private void Search_Click(object sender, RoutedEventArgs e)
-        {
-            clientsCollection = employee.FindClients(FIOSearchTB.Text, PhoneSearchTB.Text);
+        {            
+            UpdateClientsCollection(employee.FindClients(FIOSearchTB.Text, PhoneSearchTB.Text));
 
             if (clientsCollection.Count < 1) MessageBox.Show("Ни один клиент не найден.");
+        }
+
+        // Кнопка "Посмотреть последние изменения"
+        private void CheckLastChanges_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(_selectedClient.GetLastChangeString(), "Изменение");
         }
         #endregion
 
@@ -188,15 +191,24 @@ namespace BankASystem
             if (ClientsListBox.SelectedItem != null)
             {
                 _selectedClientIndex = ClientsListBox.SelectedIndex;
-                SelectClient((Client)ClientsListBox.SelectedItem);
+                SelectClient(_selectedClientIndex);
             }
 
             else DeselectClient();
         }
+
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            DataRepository.SerializeClientsList();
+        }
         #endregion
 
         #region Custom Methods
-
+        /// <summary>
+        /// Поменять аккаунт текущего пользователя на менеджера (true) / консультанта (falce)
+        /// </summary>
+        /// <param name="isManager">Менеджер (true) / Консультант (falce)</param>
         private void SwitchEmployee(bool isManager)
         {
             IsChanges = false;
@@ -214,9 +226,9 @@ namespace BankASystem
                 EmployeeButton.Content = "Войти как менеджер";
             }
 
-            clientsCollection = employee.GetAllClients(); // Необходимо заново получить коллекцию клиентов, т.к. у консультанта и менеджера
-                                                          // разные отображения клиентов (у консультанта нет доступа к паспортным данным)
-            ClientsListBox.ItemsSource = clientsCollection;
+            // Необходимо обновлять коллекцию клиентов, т.к. у консультанта и менеджера
+            // разные отображения клиентов (у консультанта нет доступа к паспортным данным)
+            UpdateClientsCollection(employee.GetAllClients());
         }
 
         /// <summary>
@@ -227,44 +239,70 @@ namespace BankASystem
         {
             StringBuilder errors = new StringBuilder(null);
 
-            if (ClientTextBoxes[0].Text == string.Empty) errors.Append(" >>ФИО<< ");
-            if (ClientTextBoxes[1].Text.Length < 2) errors.Append(" >>Номер телефона<< ");
-            if (ClientTextBoxes[2].Text.Length < 10) errors.Append(" >>Паспортные данные<< ");
+            if (ClientTextBoxes[0].Text.Replace(" ", "") == string.Empty) errors.Append(" >>ФИО<< ");
+            if (ClientTextBoxes[1].Text.Replace(" ", "").Length < 2) errors.Append(" >>Номер телефона<< ");
+            if (ClientTextBoxes[2].Text.Replace(" ", "").Length != 10) errors.Append(" >>Паспортные данные<< ");
 
             bool isError = errors.Length > 0;
 
             if (isError)
             {
-                MessageBox.Show($"Поля: {errors} заполнены неверно! Смотри подсказки к вводу данных", "Ошибка",
+                MessageBox.Show($"Поля: {errors} заполнены неверно / не заполнены! Смотри подсказки к вводу данных", "Ошибка",
                             MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             return isError;
         }
 
+        /// <summary>
+        /// Сохранить изменения клиента / Подтвердить добавление нового.
+        /// </summary>
         private void SaveChanges()
         {
-            if (!GetErrorsInChanges())
+            if (!GetErrorsInChanges()) // Если в пользовательском вводе данных нет ошибок. Иначе выведет окно об ошибках.
             {
-                if (IsAddClient)
+                if (IsAddClient) // Если добавляется клиент.
                 {
                     Client client = new Client(ClientTextBoxes[0].Text, ClientTextBoxes[1].Text, ClientTextBoxes[2].Text);
-                    (employee as Manager)?.AddClient(client);
+
+                    if (!(employee as Manager).AddClient(client)) // Добавление происходит через аккаунт менеджера (Класс Manager).
+                    {
+                        MessageBoxAboutRepeatError();
+                        return;
+                    }
                     clientsCollection.Add(client);
                     IsAddClient = false;
+                    SelectClient(clientsCollection.Count - 1);
 
                     MessageBox.Show("Клиент успешно добавлен в базу данных", "Добавление",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
-                else
+                else // Иначе, изменяются данные конкретного клиента.
                 {
                     Client client = new Client(ClientTextBoxes[0].Text, ClientTextBoxes[1].Text, ClientTextBoxes[2].Text);
-                    clientsCollection[_selectedClientIndex] = client;
-                    bool isChanged = employee.ChangeClient(_selectedClient, client);
-                    IsChanges = false;
 
-                    MessageBox.Show(isChanged ? "Клиент успешно изменён" : "Ошибка", "Изменение",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    bool isChanged = false; // Переменная, с помощью которой происходит уведомление об успешном изменении / ошибке.
+
+                    if (employee is Manager) 
+                        isChanged = (employee as Manager).ChangeClient(_selectedClient, client);
+
+                    if (employee is Consultant) 
+                        isChanged = (employee as Consultant).ChangeClient(_selectedClient, client);
+
+                    if (isChanged)
+                    {
+                        MessageBox.Show("Клиент успешно изменён", "Изменение",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBoxAboutRepeatError();
+                        return;
+                    }
+
+                    clientsCollection[_selectedClientIndex] = client; // Изменяемый клиент также обновляется в отображении ListBox
+                    SelectClient(_selectedClientIndex);
+                    IsChanges = false;
                 }
             }
         }
@@ -284,7 +322,7 @@ namespace BankASystem
                     textBox.Background = (Brush)TryFindResource(isEnabled ? enabledRes : disabledRes);
                 }
             }
-            else if (!IsManager && isEnabled) // Иначе, если изменения вносит консультант, включается только поле номера телефона клиента
+            else if (!IsManager && isEnabled) // Иначе, если изменения вносит консультант, включается только поле "Номер телефона" клиента
             {
                 TextBox phoneTB = ClientTextBoxes[1];
                 phoneTB.IsReadOnly = !isEnabled;
@@ -292,10 +330,10 @@ namespace BankASystem
             }
         }
 
-        private void SelectClient(Client client)
+        private void SelectClient(int clientIndex)
         {
-            _selectedClient = client;
-            IsCanChanges = true;
+            _selectedClient = clientsCollection[clientIndex];
+            ClientIsSelected = true;
 
             FIOTB.Text = _selectedClient.FIO;
             PhoneNumberTB.Text = _selectedClient.PhoneNumber;
@@ -304,12 +342,36 @@ namespace BankASystem
 
         private void DeselectClient()
         {
-            IsCanChanges = false;
+            ClientIsSelected = false;
 
             foreach (TextBox textBox in ClientTextBoxes)
             {
                 textBox.Text = "";
             }
+        }
+
+        /// <summary>
+        /// Обновление коллекции клиентов, отображаемой в ListBox, в соответствии с новой передаваемой коллекцией.
+        /// </summary>
+        /// <param name="newCollection"></param>
+        private void UpdateClientsCollection(ObservableCollection<Client> newCollection)
+        {
+            clientsCollection.Clear();
+
+            foreach (Client client in newCollection)
+            {
+                clientsCollection.Add(client);
+            }
+        }
+
+        private void MessageBoxAboutRepeatError()
+        {
+            string operation = "выполнить операцию";
+            if (IsAddClient) operation = "добавить клиента";
+            else if (IsChanges) operation = "изменить данные клиента";
+
+            MessageBox.Show($"Не удалось {operation}! Сотрудник с таким же паспортом / номером телефона уже есть.",
+                "Повторение данных", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         public string GetManagerPassword() => manager.ManagerPassword;
