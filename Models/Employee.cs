@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BankASystem
+namespace BankASystem.Models
 {
     // Общий абстрактный класс для всех сотрудников
     internal abstract class Employee : DataRepository

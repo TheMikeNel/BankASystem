@@ -2,10 +2,9 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Xml.Serialization;
 
-namespace BankASystem
+namespace BankASystem.Models
 {
     internal abstract class DataRepository
     {

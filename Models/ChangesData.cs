@@ -3,81 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace BankASystem
+namespace BankASystem.Models
 {
-    [Serializable]
-    public struct Client
-    {
-        private string _phoneNumber;
-        private string _passport;
-
-        public string FIO { get; set; }
-
-        public string PhoneNumber
-        {
-            get => _phoneNumber;
-
-            set
-            {
-                if (value.Replace(" ", "").Length >= 2)
-                {
-                    _phoneNumber = value.Replace(" ", "");
-                }
-            }
-        }
-
-        public string Passport
-        {
-            get
-            {
-                if (_passport.Contains(' '))
-                    _passport = _passport.Replace(" ", "");
-
-                if (_passport.Length == 10)
-                    return $"{_passport.Substring(0, 4)} {_passport.Substring(4, 6)}";
-                
-                return _passport;
-            }
-            set
-            {
-                if (value.Length >= 10 && value.Length <= 11 && value.Count(x => x == ' ') <= 1)
-                    _passport = value;
-            }
-        }
-
-        public List<ChangesData> ChangesHistory { get; set; }
-
-        public Client(string fio, string phoneNumber, string passport, ChangesData changesData)
-        {
-            _phoneNumber = "12345678901";
-            _passport = "1234567890";
-            ChangesHistory = new List<ChangesData>();
-
-            FIO = fio;
-            PhoneNumber = phoneNumber;
-            Passport = passport;
-
-            if (changesData.TypesOfChanges != string.Empty) ChangesHistory.Add(changesData);
-        }
-
-        public Client(string fio, string phoneNumber, string passport) 
-            : this(fio, phoneNumber, passport, new ChangesData()) { }
-
-        public void AddChangesData(ChangesData changesData)
-        {
-            ChangesHistory.Add(changesData);
-        }
-
-        public string GetLastChangeString()
-        {
-            return ChangesHistory.Last().ToString();
-        }
-
-        public override string ToString() => $"{FIO}\t {PhoneNumber}\t {Passport}";
-    }
-
     /// <summary>
     /// Информация об изменениях. Хранит значения: даты и времени, внесенных изменений, типов изменений, кто вносил.
     /// </summary>
@@ -107,7 +37,7 @@ namespace BankASystem
             DateTimeOfChange = DateTime.Now;
         }
 
-        public ChangesData(List<Change> changes, string typesOfChanges) 
+        public ChangesData(List<Change> changes, string typesOfChanges)
             : this(changes, typesOfChanges, null) { }
 
         public ChangesData(string typesOfChanges, string employee)
@@ -130,7 +60,7 @@ namespace BankASystem
                     changesLine.Append(change.ToString() + "\n");
                 }
             }
-            
+
             return $"Дата и время: {DateTimeOfChange}\n" +
                 $"Тип изменений: {TypesOfChanges}\n" +
                 $"Что изменено: {changesLine}\n" +
