@@ -25,7 +25,11 @@ namespace BankASystem
         public ObservableCollection<Client> ClientsCollection
         {
             get => _clientsCollection;
-            set => _clientsCollection = value;
+            set
+            {
+                _clientsCollection = value;
+                OnPropertyChanged(nameof(ClientsCollection));
+            }
         }
 
         public int selectedIndex = 0;
@@ -111,13 +115,14 @@ namespace BankASystem
             }
         }
 
-        private bool _isManager = false;
+
+        public static bool isManager = false;
         public bool IsManager
         {
-            get => _isManager;
-            set
+            get => isManager;
+            private set
             {
-                if (_isManager != value)
+                if (isManager != value)
                 {
                     if (value)
                     {
@@ -125,13 +130,13 @@ namespace BankASystem
 
                         if (passW.ShowDialog() == true)
                         {
-                            _isManager = true;
+                            isManager = true;
                             employee = empManager;
                         }
 
-                        else _isManager = false;
+                        else isManager = false;
                     }
-                    else _isManager = false;
+                    else isManager = false;
 
                     OnPropertyChanged(nameof(IsManager));
                     OnPropertyChanged(nameof(EmployeeButtonContent));
@@ -236,6 +241,7 @@ namespace BankASystem
                 { 
                     this.IsManager = !IsManager;
                     ClientsCollection = employee.GetAllClients();
+                    OnPropertyChanged(nameof(TBPassportText));
                 }));
             }
         }

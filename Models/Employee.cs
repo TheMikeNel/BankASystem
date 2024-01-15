@@ -11,7 +11,11 @@ namespace BankASystem.Models
         /// Получить список всех клиентов.
         /// </summary>
         /// <returns></returns>
-        public abstract ObservableCollection<Client> GetAllClients();
+        public ObservableCollection<Client> GetAllClients()
+        {
+            ObservableCollection<Client> clientsCollection = new ObservableCollection<Client>(ClientsList);
+            return clientsCollection;
+        }
 
         /// <summary>
         /// Поиск клиента по ФИО и номеру телефона.
@@ -19,7 +23,13 @@ namespace BankASystem.Models
         /// <param name="fio">ФИО</param>
         /// <param name="phoneNumber">Номер телефона</param>
         /// <returns></returns>
-        public new abstract ObservableCollection<Client> FindClients(string fio, string phoneNumber);
+        public new ObservableCollection<Client> FindClients(string fio, string phoneNumber)
+        {
+            ObservableCollection<Client> foundClients = new ObservableCollection<Client>(
+                DataRepository.FindClients(fio, phoneNumber));
+
+            return foundClients;
+        }
 
         /// <summary>
         /// Удалить клиента.
@@ -37,7 +47,7 @@ namespace BankASystem.Models
         /// <param name="defaultClient">Начальные данные клиента, данные которого будут изменены.</param>
         /// <param name="changedClient">Измененный клиент</param>
         /// <returns></returns>
-        protected new bool ChangeClient(Client defaultClient, Client changedClient) // Не абстрактный, так как общий для всех дочерних классов
+        protected new bool ChangeClient(Client defaultClient, Client changedClient)
         {
             List<Change> changesList = new List<Change>();
             StringBuilder changes = new StringBuilder();
@@ -82,19 +92,6 @@ namespace BankASystem.Models
             ManagerPassword = password;
         }
 
-        public override ObservableCollection<Client> GetAllClients()
-        {
-            ObservableCollection<Client> clientsCollection = new ObservableCollection<Client>(ClientsList);
-            return clientsCollection;
-        }
-
-        public override ObservableCollection<Client> FindClients(string fio, string phoneNumber)
-        {
-            ObservableCollection<Client> foundClients = new ObservableCollection<Client>(
-                DataRepository.FindClients(fio, phoneNumber));
-
-            return foundClients;
-        }
 
         public new bool AddClient(Client client)
         {
@@ -103,53 +100,12 @@ namespace BankASystem.Models
             return DataRepository.AddClient(client);
         }
 
-        public new bool ChangeClient(Client defaultClient, Client changeClient)
-        {
-            return base.ChangeClient(defaultClient, changeClient);
-        }
-
         public override string ToString() => "Менеджер";
     }
 
     // Класс консультанта
     internal class Consultant : Employee
     {
-        public override ObservableCollection<Client> GetAllClients()
-        {
-            ObservableCollection<Client> clientsList = new ObservableCollection<Client>(ClientsList);
-
-            for (int i = 0; i < clientsList.Count; i++)
-            {
-                Client client = clientsList[i];
-                client.Passport = "**** ******";
-                clientsList[i] = client;
-            }
-            return clientsList;
-        }
-
-        public override ObservableCollection<Client> FindClients(string fio, string phoneNumber)
-        {
-            ObservableCollection<Client> foundClients = new ObservableCollection<Client>(
-                DataRepository.FindClients(fio, phoneNumber));
-
-            if (foundClients.Count > 0)
-            {
-                for (int i = 0; i < foundClients.Count; i++)
-                {
-                    Client client = foundClients[i];
-                    client.Passport = "**** ******";
-                    foundClients[i] = client;
-                }
-            }
-
-            return foundClients;
-        }
-
-        public new bool ChangeClient(Client defaultClient, Client changeClient)
-        {
-            return base.ChangeClient(defaultClient, changeClient);
-        }
-
         public override string ToString() => "Консультант";
     }
 }

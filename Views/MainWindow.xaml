@@ -14,8 +14,9 @@
     </Window.DataContext>
     
     <Window.Resources>
-
+        <services:PassportValueCodingConverter x:Key="PassportCoding"/>
         <services:BooleanInverseConverter x:Key="BoolInverse"/>
+
 
         <LinearGradientBrush x:Key="MainGradient" EndPoint="0.5,1" StartPoint="0.5,0">
             <GradientStop Color="White"/>
@@ -69,7 +70,7 @@
                 <GridView>
                     <GridViewColumn Header="ФИО" DisplayMemberBinding="{Binding Path=FIO}" Width="150"/>
                     <GridViewColumn Header="Номер телефона" DisplayMemberBinding="{Binding Path=PhoneNumber}"/>
-                    <GridViewColumn Header="Паспортные данные" DisplayMemberBinding="{Binding Path=Passport}"/>
+                    <GridViewColumn Header="Паспортные данные" DisplayMemberBinding="{Binding Path=Passport, UpdateSourceTrigger=PropertyChanged, Mode=OneWay, Converter={StaticResource PassportCoding}}"/>
                 </GridView>
             </ListView.View>
 
@@ -91,8 +92,9 @@
 
                 <Label Content="Паспортные данные" HorizontalAlignment="Center" Margin="0" Height="27"/>
                 <TextBox Name="PassportTB" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" 
-                         Text="{Binding TBPassportText, UpdateSourceTrigger=PropertyChanged}"
-                         Width="350" IsReadOnly="{Binding TBPassportRO, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" MaxLength="11"
+                         Text="{Binding TBPassportText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PassportCoding}}"
+                         IsReadOnly="{Binding TBPassportRO, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="11" Width="350"
                          ToolTip="Серия   номер паспорта клиента - 10 цифр"/>
             </StackPanel>
                        
