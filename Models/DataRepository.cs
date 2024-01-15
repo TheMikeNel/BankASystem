@@ -72,7 +72,7 @@ namespace BankASystem.Models
 
             if (TryAddClient(client))
             {
-                ClientsList.Add(client);
+                _clientsList.Add(client);
 
                 return true;
             }
@@ -155,20 +155,4 @@ namespace BankASystem.Models
             return true;
         }
     }
-
-    interface IConsultant
-    {
-        ObservableCollection<Client> GetAllClients();
-        ObservableCollection<Client> FindClients(string fio, string phoneNumber);
-        bool ChangeClient(Client defoultClient, Client changedClient);
-    }
-
-    interface IManager : IConsultant
-    {
-        string ManagerPassword { get; set; }
-
-        bool AddClient(Client client);
-        bool RemoveClient(Client client);
-    }
-
 }

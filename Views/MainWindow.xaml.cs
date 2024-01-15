@@ -15,12 +15,14 @@ namespace BankASystem
     /// </summary>
     public partial class MainWindow : Window
     {
-        ObservableCollection<Client> ClientsCollection = new ObservableCollection<Client>() { new Client("Niga", "12431", "1111000333")};
         public MainWindow()
         {
             InitializeComponent();
+        }
 
-            //ClientsListView.ItemsSource = new ObservableCollection<Client>() { new Client("Niga", "12431", "1111000333")};
+        private void Window_Closed(object sender, System.EventArgs e)
+        {
+            DataRepository.SerializeClientsList();
         }
     }
 }

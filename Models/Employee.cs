@@ -64,7 +64,7 @@ namespace BankASystem.Models
     }
 
     // Класс менеджера
-    internal class Manager : Employee, IManager
+    internal class Manager : Employee
     {
         private string _managerPassword = "1111";
 
@@ -112,7 +112,7 @@ namespace BankASystem.Models
     }
 
     // Класс консультанта
-    internal class Consultant : Employee, IConsultant
+    internal class Consultant : Employee
     {
         public override ObservableCollection<Client> GetAllClients()
         {

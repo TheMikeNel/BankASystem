@@ -7,7 +7,7 @@
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:services="clr-namespace:BankASystem.Services"
         mc:Ignorable="d"
-        Title="BankA System" Height="450" Width="800">
+        Title="BankA System" Height="450" Width="800" Closed="Window_Closed">
 
     <Window.DataContext>
         <local:ViewModelBase/>
@@ -50,7 +50,7 @@
         <Button x:Name="CheckLastChanges" Content="Посмотреть последние изменения" IsEnabled="False" Grid.Column="0" Grid.Row="0"
                 Margin="10,340,10,10" ToolTip="Посмотреть последние внесенные изменения"/>
 
-        <GroupBox Header="Поиск клиента" Grid.Column="0" Grid.Row="0" Margin="10,10,10,220">
+        <GroupBox Header="Поиск клиента" Grid.Column="0" Grid.Row="0" Margin="10,10,10,203">
             <StackPanel>
                 <Label Content="ФИО" HorizontalAlignment="Center" Margin="0" Height="27"/>
                 <TextBox Name="FIOSearchTB" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" 
@@ -64,7 +64,7 @@
             </StackPanel>
         </GroupBox>
         <ListView Name="ClientsListView" SelectedItem="{Binding SelectedClient, Mode=TwoWay}"
-                  ItemsSource="{Binding Source={StaticResource SortedClients}}" Margin="10,180,10,60">
+                  ItemsSource="{Binding Source={StaticResource SortedClients}}" Margin="10,197,10,60">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="ФИО" DisplayMemberBinding="{Binding Path=FIO}" Width="150"/>
@@ -75,24 +75,24 @@
 
         </ListView>
         
-        <GroupBox Header="Данные клиента" Grid.Column="1" Grid.Row="0" Margin="10, 10, 10, 220">
-            <StackPanel DataContext="{Binding SelectedClient}">
+        <GroupBox Header="Данные клиента" Grid.Column="1" Grid.Row="0" Margin="10,10,10,85">
+            <StackPanel>
                 <Label Content="ФИО" HorizontalAlignment="Center" Margin="0" Height="27"/>
                 <TextBox Name="FIOTB" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" 
-                         Text="{Binding FIO, UpdateSourceTrigger=PropertyChanged}" Background="{StaticResource DisabledColor}"
-                         Width="350" IsReadOnly="True"
+                         Text="{Binding TBFioText, UpdateSourceTrigger=PropertyChanged}"
+                         Width="350" IsReadOnly="{Binding TBFioRO, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Фамилия, Имя, Отчество клиента"/>
 
                 <Label Content="Номер телефона" HorizontalAlignment="Center" Margin="0" Height="27"/>
                 <TextBox Name="PhoneNumberTB" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" 
-                         Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Background="{StaticResource DisabledColor}"
-                         Width="350" IsReadOnly="True" MaxLength="11"
+                         Text="{Binding TBPhoneText, UpdateSourceTrigger=PropertyChanged}"
+                         Width="350" IsReadOnly="{Binding TBPhoneRO, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" MaxLength="11"
                          ToolTip="Номер телефона клиента - только цифры (не менее 2): 89123456789"/>
 
                 <Label Content="Паспортные данные" HorizontalAlignment="Center" Margin="0" Height="27"/>
                 <TextBox Name="PassportTB" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" 
-                         Text="{Binding Passport, UpdateSourceTrigger=PropertyChanged}" Background="{StaticResource DisabledColor}"
-                         Width="350" IsReadOnly="True" MaxLength="11"
+                         Text="{Binding TBPassportText, UpdateSourceTrigger=PropertyChanged}"
+                         Width="350" IsReadOnly="{Binding TBPassportRO, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" MaxLength="11"
                          ToolTip="Серия   номер паспорта клиента - 10 цифр"/>
             </StackPanel>
                        

@@ -11,49 +11,24 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows;
+using System.ComponentModel.Design;
 
 namespace BankASystem
 {
     public class ViewModelBase : INotifyPropertyChanged
     {
-        #region Fields and Properties
+        #region Properties
 
-        Employee employee = new Consultant();
-
-        public ObservableCollection<Client> ClientsCollection { get; set; }
-
-        private string _clientFIO;
-        public string ClientFIO
+        private Employee employee = new Consultant();
+        private Manager empManager = new Manager("1111");
+        private ObservableCollection<Client> _clientsCollection;
+        public ObservableCollection<Client> ClientsCollection
         {
-            get => _clientFIO;
-            set
-            {
-                _clientFIO = value;
-                OnPropertyChanged(nameof(_clientFIO));
-            }
+            get => _clientsCollection;
+            set => _clientsCollection = value;
         }
 
-        private string _clientPhone;
-        public string ClientPhone
-        {
-            get => _clientPhone;
-            set
-            {
-                _clientPhone = value;
-                OnPropertyChanged(nameof(_clientPhone));
-            }
-        }
-
-        private string _clientPassport;
-        public string ClientPassport
-        {
-            get => _clientPassport;
-            set
-            {
-                _clientPassport = value;
-                OnPropertyChanged(nameof(_clientPassport));
-            }
-        }
+        public int selectedIndex = 0;
 
         private Client _selectedClient;
         public Client SelectedClient
@@ -62,11 +37,79 @@ namespace BankASystem
             set
             {
                 _selectedClient = value;
+                TBFioText = _selectedClient.FIO;
+                TBPhoneText = _selectedClient.PhoneNumber;
+                TBPassportText = _selectedClient.Passport;
                 OnPropertyChanged(nameof(SelectedClient));
                 OnPropertyChanged(nameof(ChangeOrSaveBtnState));
             }
         }
 
+        private bool _tbFioRO = true;
+        public bool TBFioRO
+        {
+            get => _tbFioRO;
+            set
+            {
+                _tbFioRO = value;
+                OnPropertyChanged(nameof(TBFioRO));
+            }
+        }
+
+        private bool _tbPhoneRO = true;
+        public bool TBPhoneRO
+        {
+            get => _tbPhoneRO;
+            set
+            {
+                _tbPhoneRO = value;
+                OnPropertyChanged(nameof(TBPhoneRO));
+            }
+        }
+
+        private bool _tbPassportRO = true;
+        public bool TBPassportRO
+        {
+            get => _tbPassportRO;
+            set
+            {
+                _tbPassportRO = value;
+                OnPropertyChanged(nameof(TBPassportRO));
+            }
+        }
+
+        private string _tbFioText;
+        public string TBFioText
+        {
+            get => _tbFioText;
+            set
+            {
+                _tbFioText = value;
+                OnPropertyChanged(nameof(TBFioText));
+            }
+        }
+
+        private string _tbPhoneText;
+        public string TBPhoneText
+        {
+            get => _tbPhoneText;
+            set
+            {
+                _tbPhoneText = value;
+                OnPropertyChanged(nameof(TBPhoneText));
+            }
+        }
+
+        private string _tbPassportText;
+        public string TBPassportText
+        {
+            get => _tbPassportText;
+            set
+            {
+                _tbPassportText = value;
+                OnPropertyChanged(nameof(TBPassportText));
+            }
+        }
 
         private bool _isManager = false;
         public bool IsManager
@@ -78,10 +121,13 @@ namespace BankASystem
                 {
                     if (value)
                     {
-                        PasswordWindow passW = new PasswordWindow("1111");
+                        PasswordWindow passW = new PasswordWindow(empManager.ManagerPassword);
 
                         if (passW.ShowDialog() == true)
+                        {
                             _isManager = true;
+                            employee = empManager;
+                        }
 
                         else _isManager = false;
                     }
@@ -104,7 +150,7 @@ namespace BankASystem
             get => IsChangeClient || IsAddClient ? "Сохранить" : "Изменить";
         }
 
-        public bool ChangeOrSaveBtnState // Состояние кнопки "Изменить" / "Сохранить" (вкл. - выкл.)
+        public bool ChangeOrSaveBtnState // Состояние кнопки "Изменить/Сохранить" (вкл. - выкл.)
         {
             get
             {
@@ -125,7 +171,7 @@ namespace BankASystem
             }
         }
 
-        public bool AddOrCancelBtnState // Состояние кнопки "Добавить" / "Отменить" (вкл. - выкл.)
+        public bool AddOrCancelBtnState // Состояние кнопки "Добавить/Отменить" (вкл. - выкл.)
         {
             get
             {
@@ -142,7 +188,7 @@ namespace BankASystem
         {
             get
             {
-                if (SelectedClient.FIO != null) return true;
+                if (SelectedClient != null) return true;
                 return false;
             }
         }
@@ -186,7 +232,11 @@ namespace BankASystem
             get
             {
                 return _switchEmployee ??
-                (_switchEmployee = new RelayCommand(obj => this.IsManager = !IsManager));
+                (_switchEmployee = new RelayCommand(obj => 
+                { 
+                    this.IsManager = !IsManager;
+                    ClientsCollection = employee.GetAllClients();
+                }));
             }
         }
 
@@ -195,16 +245,18 @@ namespace BankASystem
         {
             get
             {
-                return _changeOrSaveButtonClick ?? (_changeOrSaveButtonClick = new RelayCommand(obj =>
+                return _changeOrSaveButtonClick ?? 
+                (_changeOrSaveButtonClick = new RelayCommand(obj =>
                 {
                     if (IsChangeClient || IsAddClient) // Кнопка выполняет функционал "Сохранить"
                     {
-                        IsAddClient = false; 
-                        IsChangeClient = false;
-                        ChangeButtonsProperties();
-                        MessageBox.Show("Save");
+                        SaveChanges();
                     }
-                    else IsChangeClient = true;
+                    else // Иначе, "Изменить"
+                    {
+                        IsChangeClient = true;
+                        ChangeTextBoxesReadOnly(false);
+                    }
                 }));
             }
         }
@@ -214,40 +266,101 @@ namespace BankASystem
         {
             get
             {
-                return _addOrCancelButtonClick ?? (_addOrCancelButtonClick = new RelayCommand(obj =>
+                return _addOrCancelButtonClick ?? 
+                (_addOrCancelButtonClick = new RelayCommand(obj =>
                 {
                     if (IsAddClient || IsChangeClient) // Кнопка выполняет функционал "Отменить"
-                    {
-                        IsAddClient = false; 
-                        IsChangeClient = false;
-                        ChangeButtonsProperties();
-                        MessageBox.Show("Cancel");
+                    {                     
+                        CancelChanges();
                     }
-                    else IsAddClient = true;
+                    else // Иначе, "Добавить"
+                    {
+                        IsAddClient = true;
+                        ChangeTextBoxesReadOnly(false);
+                    }
                 }));
             }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         #endregion
 
+
+        #region Methods
+
         public ViewModelBase()
         {
-            ClientsCollection = new ObservableCollection<Client>() { 
-                new Client("Name", "1234", "1111222333"), new Client("Fame2", "1234", "1111222333"), new Client("agme", "1234", "1111222333") };
+            ClientsCollection = employee.GetAllClients();
+        }
+
+        private void CancelChanges()
+        {
+            IsAddClient = false;
+            IsChangeClient = false;
+            SelectedClient = _selectedClient;
+            ChangeTextBoxesReadOnly(true);
+        }
+
+        private void SaveChanges()
+        {
+
+            if (!Client.CanCreateNewClient(TBFioText, TBPhoneText, TBPassportText, out StringBuilder errors))
+            {
+                MessageBox.Show($"Клиент не сохранён!\nВ пользовательском вводе присутствуют ошибки:\n{errors}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            Client client = new Client(_tbFioText, _tbPhoneText, _tbPassportText);
+
+            if (employee is Manager && IsAddClient)
+            {
+                MessageBox.Show("Произошло");
+                if ((employee as Manager).AddClient(client))
+                {
+                    _clientsCollection.Add(client);
+                    SelectedClient = client;
+                    MessageBox.Show("Произошло норм");
+                }
+                else MessageBox.Show("Произошло дерьмо");
+            }
+
+            if (IsChangeClient)
+            {
+                _selectedClient.FIO = client.FIO;
+                _selectedClient.PhoneNumber = client.PhoneNumber;
+                _selectedClient.Passport = client.Passport;
+                OnPropertyChanged(nameof(SelectedClient));
+            }
+
+            IsAddClient = false;
+            IsChangeClient = false;
+
+            ChangeTextBoxesReadOnly(true);
         }
 
         private void ChangeButtonsProperties()
         {
             OnPropertyChanged(nameof(ChangeOrSaveBtnState));
-            OnPropertyChanged(nameof(AddOrCancelBtnState));
             OnPropertyChanged(nameof(ChangeOrSaveBtnContent));
+            OnPropertyChanged(nameof(AddOrCancelBtnState));
             OnPropertyChanged(nameof(AddOrCancelBtnContent));
         }
+
+        private void ChangeTextBoxesReadOnly(bool isReadOnly)
+        {
+            TBPhoneRO = isReadOnly;
+
+            if (IsManager)
+            {
+                TBFioRO = isReadOnly;
+                TBPassportRO = isReadOnly;
+            }
+        }
+        #endregion
     }
 }

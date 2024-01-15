@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 namespace BankASystem.Models
 {
     [Serializable]
-    public struct Client : INotifyPropertyChanged, IComparable
+    public class Client : INotifyPropertyChanged, IComparable
     {
         private string _fio;
         private string _phoneNumber;
@@ -23,8 +23,11 @@ namespace BankASystem.Models
             get => _fio;
             set
             {
-                _fio = value;
-                OnPropertyChanged("FIO");
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _fio = value;
+                    OnPropertyChanged("FIO");
+                }
             }
         }
 
@@ -34,10 +37,13 @@ namespace BankASystem.Models
 
             set
             {
-                if (value.Replace(" ", "").Length >= 2)
+                if (!string.IsNullOrEmpty(value))
                 {
-                    _phoneNumber = value.Replace(" ", "");
-                    OnPropertyChanged("PhoneNumber");
+                    if (value.Replace(" ", "").Length >= 2)
+                    {
+                        _phoneNumber = value.Replace(" ", "");
+                        OnPropertyChanged("PhoneNumber");
+                    }
                 }
             }
         }
@@ -58,28 +64,34 @@ namespace BankASystem.Models
             }
             set
             {
-                if (value.Length >= 10 && value.Length <= 11 && value.Count(x => x == ' ') <= 1)
+                if (!string.IsNullOrEmpty(value))
                 {
-                    _passport = value;
-                    OnPropertyChanged("Passport");
+                    if (value.Length >= 10 && value.Length <= 11 && value.Count(x => x == ' ') <= 1)
+                    {
+                        _passport = value;
+                        OnPropertyChanged("Passport");
+                    }
                 }
             }
         }
 
         public List<ChangesData> ChangesHistory { get; set; }
 
-        public Client(string fio, string phoneNumber, string passport, ChangesData changesData)
+        public Client()
         {
             _fio = "NaN";
             _phoneNumber = "12345678901";
             _passport = "1234567890";
             PropertyChanged = null;
             ChangesHistory = new List<ChangesData>();
+        }
 
+        public Client(string fio, string phoneNumber, string passport, ChangesData changesData)
+        {
             FIO = fio;
             PhoneNumber = phoneNumber;
             Passport = passport;
-            if (changesData.TypesOfChanges != string.Empty) ChangesHistory.Add(changesData);
+            ChangesHistory = new List<ChangesData> { changesData };
         }
 
         public Client(string fio, string phoneNumber, string passport) 
@@ -93,6 +105,25 @@ namespace BankASystem.Models
         public string GetLastChangeString()
         {
             return ChangesHistory.Last().ToString();
+        }
+
+        public static bool CanCreateNewClient(string fio, string phone, string passport, out StringBuilder errors)
+        {
+            StringBuilder errorsSB = new StringBuilder(32);
+            if (string.IsNullOrEmpty(fio) || fio.Length < 1)
+                errorsSB.Append("ФИО\n");
+            if (string.IsNullOrEmpty(phone) || phone.Length < 2)
+                errorsSB.Append("Номер телефона\n");
+            if (string.IsNullOrEmpty(passport) || !(passport.Length >= 10 && passport.Length <= 11 && passport.Count(x => x == ' ') <= 1))
+                errorsSB.Append("Паспорт\n");
+
+            errors = errorsSB;
+
+            if (errors.Length > 0)
+            {
+                return false;
+            }
+            return true;
         }
 
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)
