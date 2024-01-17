@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace BankASystem.Models
@@ -20,6 +18,7 @@ namespace BankASystem.Models
             get => DateTimeOfChange.ToString("yyyy-MM-dd HH:mm:ss");
             set => DateTimeOfChange = DateTime.ParseExact(value, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
+
         [XmlIgnore]
         public DateTime DateTimeOfChange { get; private set; }
 
@@ -28,6 +27,7 @@ namespace BankASystem.Models
         public string ChangedEmployee { get; set; }
 
         #region Конструкторы
+
         public ChangesData(List<Change> changes, string typesOfChanges, string employee)
         {
             Changes = changes;
@@ -47,6 +47,7 @@ namespace BankASystem.Models
             : this(typesOfChanges, null) { }
 
         public ChangesData() : this("Instantiate") { }
+
         #endregion
 
         public override string ToString()
@@ -85,7 +86,7 @@ namespace BankASystem.Models
 
         public override string ToString()
         {
-            return $"{ChangesFrom} <= изменено на => {ChangesTo}";
+            return $"{ChangesFrom} - изменено на: {ChangesTo}";
         }
     }
 }

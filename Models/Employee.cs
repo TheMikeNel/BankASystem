@@ -47,7 +47,7 @@ namespace BankASystem.Models
         /// <param name="defaultClient">Начальные данные клиента, данные которого будут изменены.</param>
         /// <param name="changedClient">Измененный клиент</param>
         /// <returns></returns>
-        protected new bool ChangeClient(Client defaultClient, Client changedClient)
+        public bool ChangeClient(Client defaultClient, Client changedClient)
         {
             List<Change> changesList = new List<Change>();
             StringBuilder changes = new StringBuilder();
@@ -55,21 +55,20 @@ namespace BankASystem.Models
             if (changedClient.FIO != defaultClient.FIO)
             {
                 changesList.Add(new Change(defaultClient.FIO, changedClient.FIO));
-                changes.Append(" -ФИО- ");
+                changes.Append("ФИО\t");
             }
             if (changedClient.PhoneNumber != defaultClient.PhoneNumber)
             {
                 changesList.Add(new Change(defaultClient.PhoneNumber, changedClient.PhoneNumber));
-                changes.Append(" -Номер телефона- ");
+                changes.Append("Номер телефона\t");
             }
             if (changedClient.Passport != defaultClient.Passport)
             {
                 changesList.Add(new Change(defaultClient.Passport, changedClient.Passport));
-                changes.Append(" -Паспорт- ");
+                changes.Append("Паспорт\t");
             }
 
-            changedClient.AddChangesData(new ChangesData(changesList, changes.ToString(), this.ToString()));
-            return DataRepository.ChangeClient(defaultClient, changedClient);
+            return DataRepository.ChangeClient(defaultClient, changedClient, new ChangesData(changesList, changes.ToString(), this.ToString()));
         }
     }
 

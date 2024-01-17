@@ -48,24 +48,24 @@
         <Button Name="EmployeeButton" Content="{Binding EmployeeButtonContent, UpdateSourceTrigger=PropertyChanged}" Margin="10,5,10,5" 
                 Grid.Row="1" Grid.ColumnSpan="2" Command="{Binding SwitchEmployee}"/>
         
-        <Button x:Name="CheckLastChanges" Content="Посмотреть последние изменения" IsEnabled="False" Grid.Column="0" Grid.Row="0"
-                Margin="10,340,10,10" ToolTip="Посмотреть последние внесенные изменения"/>
+        <Button x:Name="CheckLastChanges" Content="Посмотреть последние изменения" IsEnabled="{Binding ClientIsSelected}" Grid.Column="0" Grid.Row="0"
+                Margin="10,340,10,10" ToolTip="Посмотреть последние внесенные изменения" Command="{Binding GetLastChanges}"/>
 
         <GroupBox Header="Поиск клиента" Grid.Column="0" Grid.Row="0" Margin="10,10,10,203">
             <StackPanel>
                 <Label Content="ФИО" HorizontalAlignment="Center" Margin="0" Height="27"/>
                 <TextBox Name="FIOSearchTB" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" 
-                    Text="" Background="{StaticResource EnabledColor}" Width="350"/>
+                    Text="{Binding TBFioSearch, Mode=OneWayToSource}" Width="350"/>
                 
                 <Label Content="Номер телефона" HorizontalAlignment="Center" Margin="0" Height="27"/>
                 <TextBox Name="PhoneSearchTB" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" 
-                    Text="" Background="{StaticResource EnabledColor}" Width="350" MaxLength="11"/>
+                    Text="{Binding TBPhoneSearch, Mode=OneWayToSource}" Width="350" MaxLength="11"/>
                 
-                <Button Content="Поиск" Margin="10" Width="100" Height="30"/>
+                <Button Content="Поиск" Margin="10" Width="100" Height="30" Command="{Binding Search}"/>
             </StackPanel>
         </GroupBox>
         <ListView Name="ClientsListView" SelectedItem="{Binding SelectedClient, Mode=TwoWay}"
-                  ItemsSource="{Binding Source={StaticResource SortedClients}}" Margin="10,197,10,60">
+                  ItemsSource="{Binding Source={StaticResource SortedClients}}" Margin="10,197,10,60" IsEnabled="{Binding LVIsEnabled}">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="ФИО" DisplayMemberBinding="{Binding Path=FIO}" Width="150"/>

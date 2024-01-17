@@ -70,7 +70,7 @@ namespace BankASystem.Models
         {
             if (_isFirstOpen) DeserializeClientsList();
 
-            if (TryAddClient(client))
+            if (!CheckRepetitions(client))
             {
                 _clientsList.Add(client);
 
@@ -80,79 +80,37 @@ namespace BankASystem.Models
             return false;
         }
 
-        protected static bool ChangeClient(Client defaultClient, Client changedClient)
+        protected static bool ChangeClient(Client defaultClient, Client changedClient, ChangesData changesData)
         {
-            // Для изменения данных о клиенте, необходимо найти его в общем списке.
-            // Так как номер телефона, теоретически, не может повторяться, поиск производится по номеру телефона
-            int clientInd = ClientsList.FindIndex(x => x.PhoneNumber == defaultClient.PhoneNumber);
-
-            if (clientInd > -1 && TryChangeClientData(defaultClient, changedClient))
+            if (!CheckRepetitions(changedClient, true, defaultClient))
             {
-                // Если изменения вносит консультант (паспортные данные указаны как "**** ******"), паспортные данные не изменяются.
-                if (changedClient.Passport.Contains('*')) changedClient.Passport = ClientsList[clientInd].Passport; 
-
-                ClientsList[clientInd] = changedClient;
-
+                defaultClient.FIO = changedClient.FIO;
+                defaultClient.PhoneNumber = changedClient.PhoneNumber;
+                defaultClient.Passport = changedClient.Passport;
+                defaultClient.AddChangesData(changesData);
                 return true;
             }
             return false;
         }
 
-        protected static bool RemoveClient(Client client)
-        {
-            for (int i = 0; i < _clientsList.Count; i++)
-            {
-                if (_clientsList[i].PhoneNumber == client.PhoneNumber)
-                {
-                    _clientsList.RemoveAt(i);
-                    return true;
-                }
-            }
-            return false;
-        }
+        protected static bool RemoveClient(Client client) => _clientsList.Remove(client);
 
         /// <summary>
-        /// Проверка на повторение индивидуальных данных при изменении конкретного клиента. 
+        /// Проверка на повторение индивидуальных данных при добавлении / изменении данных клиента.
         /// </summary>
-        /// <param name="defaultClient"></param>
-        /// <param name="changedClient"></param>
-        /// <returns>falce - если данные повторяются / true - если нет</returns>
-        private static bool TryChangeClientData(Client defaultClient, Client changedClient)
-        {
-            // Сравнение происходит по списку с исключенным defaultClient
-            List<Client> clients = new List<Client>(ClientsList);
-            int clientInd = clients.FindIndex(x => x.PhoneNumber == defaultClient.PhoneNumber);
-
-            if (clientInd > -1) clients.RemoveAt(clientInd);
-            else return true;
-
-            foreach (Client client in clients)
-            {
-                if (changedClient.PhoneNumber == client.PhoneNumber || changedClient.Passport == client.Passport)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Проверка на повторение индивидуальных данных при добавлении конкретного клиента.
-        /// </summary>
-        /// <param name="tClient"></param>
-        /// <returns>falce - если данные повторяются / true - если нет</returns>
-        private static bool TryAddClient(Client tClient)
+        /// <param name="vCient">Проверяемый клиент</param>
+        /// <param name="isChanging">Добавление клиента / Изменение данных (Добавление по умолчанию - falce)</param>
+        /// <param name="defaultChangingClient">Ссылка на клиента, данные которого будут изменены</param>
+        /// <returns>true - если данные повторяются / falce - если нет</returns>
+        private static bool CheckRepetitions(Client vCient, bool isChanging = false, Client defaultChangingClient = null)
         {
             foreach (Client client in ClientsList)
             {
-                if (tClient.PhoneNumber == client.PhoneNumber || tClient.Passport == client.Passport)
-                {
-                    return false;
-                }
-            }
+                if (isChanging && defaultChangingClient != null && defaultChangingClient == client) continue;
 
-            return true;
+                if (vCient.PhoneNumber == client.PhoneNumber || vCient.Passport == client.Passport) return true;
+            }
+            return false;
         }
     }
 }
