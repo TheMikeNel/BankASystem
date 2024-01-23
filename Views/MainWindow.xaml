@@ -96,6 +96,8 @@
                          IsReadOnly="{Binding TBPassportRO, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                          MaxLength="11" Width="350"
                          ToolTip="Серия   номер паспорта клиента - 10 цифр"/>
+                <Button Content="Окно банковских счетов" Margin="0,20,0,0" Height="30"  Width="350"/>
+
             </StackPanel>
                        
         </GroupBox>

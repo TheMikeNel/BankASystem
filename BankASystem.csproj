@@ -59,6 +59,10 @@
     <Compile Include="Services\PassportValueCodingConverter.cs" />
     <Compile Include="Services\RelayCommand.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Page Include="Views\BankAccountWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -70,6 +74,9 @@
     <Compile Include="Models\Client.cs" />
     <Compile Include="Models\DataRepository.cs" />
     <Compile Include="Models\Employee.cs" />
+    <Compile Include="Views\BankAccountWindow.xaml.cs">
+      <DependentUpon>BankAccountWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

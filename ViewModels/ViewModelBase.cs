@@ -352,6 +352,19 @@ namespace BankASystem
             }
         }
 
+        private RelayCommand _openBankAccountWindow;
+        public RelayCommand OpenBankAccountWindow
+        {
+            get
+            {
+                return _openBankAccountWindow ??
+                (_openBankAccountWindow = new RelayCommand(obj =>
+                {
+
+                }));
+            }
+        }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)
