@@ -55,9 +55,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\BankAccount.cs" />
     <Compile Include="Services\BooleanInverseConverter.cs" />
     <Compile Include="Services\PassportValueCodingConverter.cs" />
     <Compile Include="Services\RelayCommand.cs" />
+    <Compile Include="ViewModels\ViewModelAccount.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Page Include="Views\BankAccountWindow.xaml">
       <SubType>Designer</SubType>

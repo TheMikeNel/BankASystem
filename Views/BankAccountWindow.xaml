@@ -8,13 +8,16 @@
         Title="BankAccountWindow" Height="450" Width="600" ResizeMode="NoResize">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="0.6*"/>
+            <ColumnDefinition Width="0.4*"/>
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Column="0">
             <Button Content="Открыть новый счет" Height="30" Margin="10, 20, 10, 0"/>
-            
+            <StackPanel Visibility="Visible" IsEnabled="False">
+                <Label Content="Номер счета" HorizontalAlignment="Center"/>
+                
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>
