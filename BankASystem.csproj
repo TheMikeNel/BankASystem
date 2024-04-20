@@ -56,10 +56,13 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Models\BankAccount.cs" />
+    <Compile Include="Models\BankAccountsRepository.cs" />
     <Compile Include="Services\BooleanInverseConverter.cs" />
     <Compile Include="Services\PassportValueCodingConverter.cs" />
     <Compile Include="Services\RelayCommand.cs" />
-    <Compile Include="ViewModels\ViewModelAccount.cs" />
+    <Compile Include="Services\SerializableDictionary.cs" />
+    <Compile Include="Services\Serializer.cs" />
+    <Compile Include="ViewModels\ViewModelAccounts.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Page Include="Views\BankAccountWindow.xaml">
       <SubType>Designer</SubType>
@@ -74,7 +77,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Models\Client.cs" />
-    <Compile Include="Models\DataRepository.cs" />
+    <Compile Include="Models\ClientsDataRepository.cs" />
     <Compile Include="Models\Employee.cs" />
     <Compile Include="Views\BankAccountWindow.xaml.cs">
       <DependentUpon>BankAccountWindow.xaml</DependentUpon>

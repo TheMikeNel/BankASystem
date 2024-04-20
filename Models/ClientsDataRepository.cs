@@ -1,52 +1,35 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Xml.Serialization;
+﻿using BankASystem.Services;
+using System.Collections.Generic;
 
 namespace BankASystem.Models
 {
-    internal abstract class DataRepository
+    internal abstract class ClientsDataRepository
     {
         private static readonly string _xmlPath = "ClientsRepository.xml";
-        private static bool _isFirstOpen = true;
-
+        private static bool _isInit = false;
+        private static Serializer<List<Client>> _serializer = new Serializer<List<Client>>();
         private static List<Client> _clientsList = new List<Client>();
-
         protected static List<Client> ClientsList
         {
             get
             {
-                if (_isFirstOpen) DeserializeClientsList();
+                if (!_isInit)
+                {
+                    if (!_serializer.TryDeserializeData(out _clientsList, _xmlPath)) _clientsList = new List<Client>();
+                    _isInit = true;
+                }
                 return _clientsList;
             }
 
             private set 
             {
-                if (_isFirstOpen) DeserializeClientsList();
                 _clientsList = value; 
             }
         }
 
-        public static void SerializeClientsList()
+        public static void SaveClientsList()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Client>));
-            StreamWriter sw = new StreamWriter(_xmlPath);
-            serializer.Serialize(sw, ClientsList);
-            sw.Close();
-        }
-
-        private static void DeserializeClientsList()
-        {
-            _isFirstOpen = false;
-
-            if (File.Exists(_xmlPath))
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(List<Client>));
-                StreamReader sr = new StreamReader(_xmlPath);
-                ClientsList = serializer.Deserialize(sr) as List<Client>;
-                sr.Close();
-            }
+            _serializer.SerializeData(ClientsList, _xmlPath);
         }
 
         protected static List<Client> FindClients(string fio, string phoneNumber)
@@ -68,11 +51,9 @@ namespace BankASystem.Models
         /// <returns>true - если успешно добавлен / falce - если данные повторяются</returns>
         protected static bool AddClient(Client client)
         {
-            if (_isFirstOpen) DeserializeClientsList();
-
             if (!CheckRepetitions(client))
             {
-                _clientsList.Add(client);
+                ClientsList.Add(client);
 
                 return true;
             }

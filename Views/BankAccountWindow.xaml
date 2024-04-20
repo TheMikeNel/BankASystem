@@ -3,9 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:BankASystem.Views"
+        xmlns:local="clr-namespace:BankASystem"
         mc:Ignorable="d"
         Title="BankAccountWindow" Height="450" Width="600" ResizeMode="NoResize">
+
+    <Window.DataContext>
+        <local:ViewModelAccounts/>
+    </Window.DataContext>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0.6*"/>
@@ -13,11 +18,15 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Column="0">
+            <GroupBox Header="Клиент" FontSize="18">
+                <TextBlock Text="Зюзя"/>
+            </GroupBox>
             <Button Content="Открыть новый счет" Height="30" Margin="10, 20, 10, 0"/>
             <StackPanel Visibility="Visible" IsEnabled="False">
                 <Label Content="Номер счета" HorizontalAlignment="Center"/>
                 
             </StackPanel>
+
         </StackPanel>
     </Grid>
 </Window>

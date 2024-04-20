@@ -5,7 +5,7 @@ using System.Text;
 namespace BankASystem.Models
 {
     // Общий абстрактный класс для всех сотрудников
-    internal abstract class Employee : DataRepository
+    internal abstract class Employee : ClientsDataRepository
     {
         /// <summary>
         /// Получить список всех клиентов.
@@ -26,7 +26,7 @@ namespace BankASystem.Models
         public new ObservableCollection<Client> FindClients(string fio, string phoneNumber)
         {
             ObservableCollection<Client> foundClients = new ObservableCollection<Client>(
-                DataRepository.FindClients(fio, phoneNumber));
+                ClientsDataRepository.FindClients(fio, phoneNumber));
 
             return foundClients;
         }
@@ -38,7 +38,7 @@ namespace BankASystem.Models
         /// <returns></returns>
         public new bool RemoveClient(Client client)
         {
-            return DataRepository.RemoveClient(client);
+            return ClientsDataRepository.RemoveClient(client);
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace BankASystem.Models
                 changes.Append("Паспорт\t");
             }
 
-            return DataRepository.ChangeClient(defaultClient, changedClient, new ChangesData(changesList, changes.ToString(), this.ToString()));
+            return ClientsDataRepository.ChangeClient(defaultClient, changedClient, new ChangesData(changesList, changes.ToString(), this.ToString()));
         }
     }
 
@@ -96,7 +96,7 @@ namespace BankASystem.Models
         {
             client.ChangesHistory.Clear();
             client.AddChangesData(new ChangesData("Создание", this.ToString()));
-            return DataRepository.AddClient(client);
+            return ClientsDataRepository.AddClient(client);
         }
 
         public override string ToString() => "Менеджер";

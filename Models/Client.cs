@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace BankASystem.Models
 {
@@ -14,7 +15,45 @@ namespace BankASystem.Models
         private string _phoneNumber;
         private string _passport;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        [XmlElement("DepositAccount")]
+        public int DepositAccountSerialization
+        {
+            get
+            { 
+                if (DepositAccount != null) return DepositAccount.ID;
+                else return -1;
+            }
+            set
+            {
+                if (value > -1 && BankAccountsRepository.HasAccountByID(value))
+                {
+                    BankAccount<int> account = BankAccountsRepository.GetAccountByID(value);
+                    if (account is DepositAccount<int>) DepositAccount = (DepositAccount<int>)account;
+                }                 
+            }
+        }
+        [XmlIgnore]
+        public DepositAccount<int> DepositAccount { get; private set; }
+
+        [XmlElement("NonDepositAccount")]
+        public int NonDepositAccountSerialization
+        {
+            get
+            {
+                if (NonDepositAccount != null) return NonDepositAccount.ID;
+                else return -1;
+            }
+            set
+            {
+                if (value > -1 && BankAccountsRepository.HasAccountByID(value))
+                {
+                    BankAccount<int> account = BankAccountsRepository.GetAccountByID(value);
+                    if (account is NonDepositAccount<int>) NonDepositAccount = (NonDepositAccount<int>)account;
+                }
+            }
+        }
+        [XmlIgnore]
+        public NonDepositAccount<int> NonDepositAccount { get; private set; }
 
         public string FIO 
         {
@@ -108,6 +147,24 @@ namespace BankASystem.Models
             return ChangesHistory.Last().ToString();
         }
 
+        public bool AddNewBankAccount(IAccount<int> newAccount)
+        {
+            if (newAccount != null)
+            {
+                if (newAccount is DepositAccount<int> && DepositAccount == null)
+                {
+                    DepositAccount = (DepositAccount<int>)newAccount;
+                    return true;
+                }
+                else if (newAccount is NonDepositAccount<int> && NonDepositAccount == null)
+                {
+                    NonDepositAccount = (NonDepositAccount<int>)newAccount;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static bool CanCreateNewClient(string fio, string phone, string passport, out StringBuilder errors)
         {
             StringBuilder errorsSB = new StringBuilder(32);
@@ -127,7 +184,8 @@ namespace BankASystem.Models
             return true;
         }
 
-        public void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

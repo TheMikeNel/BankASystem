@@ -1,5 +1,6 @@
 ﻿using BankASystem.Models;
 using System.Windows;
+using System.Windows.Documents;
 
 namespace BankASystem
 {
@@ -16,7 +17,8 @@ namespace BankASystem
 
         private void Window_Closed(object sender, System.EventArgs e)
         {
-            DataRepository.SerializeClientsList();
+            ClientsDataRepository.SaveClientsList();
+            BankAccountsRepository.SaveAccounts();
         }
     }
 }
