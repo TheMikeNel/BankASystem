@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
+using BankASystem.Views;
 
 namespace BankASystem
 {
@@ -42,6 +43,7 @@ namespace BankASystem
                 OnPropertyChanged(nameof(SelectedClient));
                 OnPropertyChanged(nameof(ClientIsSelected));
                 OnPropertyChanged(nameof(ChangeOrSaveBtnState));
+                OnPropertyChanged(nameof(OpenBankAccountsState));
             }
         }
 
@@ -123,7 +125,7 @@ namespace BankASystem
 
         #endregion
 
-        #region TextBox Propertie
+        #region TextBox Properties
 
         private bool _tbFioRO = true; // RO - IsReadOnly
         public bool TBFioRO
@@ -261,6 +263,14 @@ namespace BankASystem
             get => !(IsAddClient || IsChangeClient);
         } // Свойство ListView IsEnabled 
 
+        public bool OpenBankAccountsState
+        {
+            get
+            {
+                return SelectedClient != null;
+            }
+        }
+
         #endregion
 
         #region Commands and Events
@@ -360,11 +370,12 @@ namespace BankASystem
                 return _openBankAccountWindow ??
                 (_openBankAccountWindow = new RelayCommand(obj =>
                 {
-
+                    ViewModelAccounts.CurrentClient = SelectedClient;
+                    BankAccountWindow accounts = new BankAccountWindow();
+                    accounts.ShowDialog();
                 }));
             }
         }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)

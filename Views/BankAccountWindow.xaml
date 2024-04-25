@@ -4,29 +4,141 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BankASystem"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="BankAccountWindow" Height="450" Width="600" ResizeMode="NoResize">
+        Title="BankAccountWindow" Height="600" Width="800" ResizeMode="NoResize" >
 
     <Window.DataContext>
         <local:ViewModelAccounts/>
     </Window.DataContext>
 
-    <Grid>
+    <Window.Resources>
+        <LinearGradientBrush x:Key="MainGradient" EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="White"/> 
+            <GradientStop Color="LightGreen" Offset="3"/>
+        </LinearGradientBrush>
+    </Window.Resources>
+    
+    
+    <Grid Background="{StaticResource MainGradient}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0.6*"/>
-            <ColumnDefinition Width="0.4*"/>
+            <ColumnDefinition Width="0.5*"/>
+            <ColumnDefinition Width="0.5*"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="0">
+        <StackPanel x:Name="MainPanel" Grid.Column="0" Margin="5, 0">
             <GroupBox Header="Клиент" FontSize="18">
-                <TextBlock Text="Зюзя"/>
+                <TextBlock Text="{Binding CurrentClientName}" TextAlignment="Center"/>
             </GroupBox>
-            <Button Content="Открыть новый счет" Height="30" Margin="10, 20, 10, 0"/>
-            <StackPanel Visibility="Visible" IsEnabled="False">
-                <Label Content="Номер счета" HorizontalAlignment="Center"/>
-                
-            </StackPanel>
+            <Button Content="Открыть новый счет" FontSize="16" FontWeight="SemiBold" Height="30" Margin="5, 10" IsEnabled="{Binding OpenNewAccountButtonState}" Command="{Binding OpenNewAccount}"/>
 
+            <StackPanel x:Name="WriteAccountPanel" Visibility="{Binding WriteAccountPanelState}">
+                
+                <GroupBox Header="Tип счёта" FontSize="18">
+                    <ComboBox HorizontalAlignment="Center" Margin="0,0,0,0" Width="250" SelectedIndex="{Binding AccountTypeIndex, Mode=OneWayToSource}">
+                        <sys:String>Депозитный счёт</sys:String>
+                        <sys:String>Недепозитный счёт</sys:String>
+                    </ComboBox>
+                </GroupBox>
+                
+                <GroupBox Header="Номер счёта" FontSize="18">
+                    <TextBox Text="{Binding NewAccountID, Mode=OneWay}" FontSize="16" FontWeight="SemiBold" TextAlignment="Center" 
+                             Height="25" Margin="0, 10, 0, 0" MaxLength="24" IsReadOnly="True"/>
+                </GroupBox>
+                
+                <GroupBox Header="Начальный баланс" FontSize="18">
+                    <TextBox Text="{Binding StartBalance}" FontSize="16" FontWeight="SemiBold" TextAlignment="Center" 
+                             Height="25" Margin="0, 10, 0, 0" MaxLength="20"/>
+                </GroupBox>
+                
+                <GroupBox Header="Настройки депозитного счёта" FontSize="18" Visibility="{Binding DepositSettingsPanelState}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.5*"/>
+                            <ColumnDefinition Width="0.5*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel x:Name="InterestRatePanel" Orientation="Horizontal">
+                            <TextBlock Text="Ставка, %:" Margin="5, 0" FontSize="14" VerticalAlignment="Center"/>
+                            <TextBox x:Name="InterestRate" Grid.Column="0" Text="{Binding WriteInterestRate}" FontSize="14" FontWeight="SemiBold" TextAlignment="Center"
+                                 Height="25" Width="60" MaxLength="8" ToolTip="Число от 0 до 100%"/>
+                        </StackPanel>
+                        
+                        <StackPanel x:Name="InterestPeriodPanel" Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Text="Период, мес.:" Margin="5, 0" TextWrapping="Wrap" Width="55" FontSize="14" VerticalAlignment="Center"/>
+                            <TextBox x:Name="WriteField" Text="{Binding WriteInterestPeriod}" FontSize="14" FontWeight="SemiBold" 
+                                     TextAlignment="Center" Width="50" Height="25" MaxLength="3"
+                                     ToolTip="Период действия депозита (Число - количество месяцев / Любой символ или число меньше 1 - для значения '∞')"/>
+                            <ComboBox x:Name="SelectBox"
+                                      SelectedItem="{Binding WriteInterestPeriod, Mode=OneWayToSource}" Margin="2, 0" Width="19" Height="25">
+                                <sys:String>∞</sys:String>
+                                <sys:String>2</sys:String>
+                                <sys:String>4</sys:String>
+                                <sys:String>6</sys:String>
+                                <sys:String>12</sys:String>
+                                <sys:String>24</sys:String>
+                                <sys:String>36</sys:String>
+                            </ComboBox>
+                        </StackPanel>                                          
+                    </Grid>
+                </GroupBox>
+                
+                <Button Content="Открыть" Command="{Binding OpenNewAccountApply}" Height="30" Margin="0, 10, 0, 0"/>
+                <Button Content="Отмена" Command="{Binding OpenNewAccountCancel}" Height="30" Margin="0, 10, 0, 0"/>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel x:Name="AccountsPanel" Grid.Column="1" Margin="5, 0">
+            <GroupBox Header="Депозитный счёт" FontSize="18" FontWeight="SemiBold" Visibility="{Binding DepositAccountPanelState}">
+                <StackPanel>
+                    <StackPanel x:Name="IDPanel" Orientation="Horizontal">
+                        <TextBlock Text="ID аккаунта:" FontWeight="Normal"/>
+                        <TextBlock Text="{Binding DepositAccountID}" Margin="10, 0"/>
+                    </StackPanel>
+
+                    <StackPanel x:Name="BalancePanel" Orientation="Horizontal">
+                        <TextBlock Text="Баланс:" FontWeight="Normal"/>
+                        <TextBlock Text="{Binding DepositAccountBalance}" Margin="10, 0"/>
+                        <TextBlock Text="₽" FontWeight="Normal"/>
+                    </StackPanel>
+                    
+                    <StackPanel x:Name="ProcentPanel" Orientation="Horizontal">
+                        <TextBlock Text="Процентная ставка:" FontWeight="Normal"/>
+                        <TextBlock Text="{Binding DepositAccountInterest}" Margin="10, 0"/>
+                        <TextBlock Text="%" FontWeight="Normal"/>
+                    </StackPanel>
+
+                    <StackPanel x:Name="PeriodPanel" Orientation="Horizontal">
+                        <TextBlock Text="Срок депозита:" FontWeight="Normal"/>
+                        <TextBlock Text="{Binding DepositAccountPeriod}" Margin="10, 0"/>
+                        <TextBlock Text="мес." FontWeight="Normal"/>
+                    </StackPanel>
+
+                    <Button Content="Начислить проценты" Height="30" Margin="0, 5" FontSize="14" Background="LightGreen"  FontWeight="Normal"/>
+                    <Button Content="Операции по счёту" Height="30" Margin="0, 5" FontSize="14" FontWeight="Normal"/>
+                    <Button Content="Перевод" Height="30" Margin="0, 5" FontSize="14" FontWeight="Normal"/>
+                    <Button Content="Закрыть счёт" Height="30" Margin="0, 5, 0, 0" FontSize="14" Background="OrangeRed" FontWeight="Normal"/>
+                </StackPanel>
+            </GroupBox>
+            
+            <GroupBox Header="Недепозитный счёт" FontSize="18" FontWeight="SemiBold" Visibility="{Binding NonDepositAccountPanelState}">
+                <StackPanel>
+                    <StackPanel x:Name="IDPanel2" Orientation="Horizontal">
+                        <TextBlock Text="ID аккаунта:" FontWeight="Normal"/>
+                        <TextBlock Text="{Binding NonDepositAccountID}" Margin="10, 0"/>
+                    </StackPanel>
+
+                    <StackPanel x:Name="BalancePanel2" Orientation="Horizontal">
+                        <TextBlock Text="Баланс:" FontWeight="Normal"/>
+                        <TextBlock Text="{Binding NonDepositAccountBalance }" Margin="10, 0"/>
+                        <TextBlock Text="₽" FontWeight="Normal"/>
+                    </StackPanel>
+
+                    <Button Content="Операции по счёту" Height="30" Margin="0, 5" FontSize="14" FontWeight="Normal"/>
+                    <Button Content="Перевод" Height="30" Margin="0, 5" FontSize="14" FontWeight="Normal"/>
+                    <Button Content="Закрыть счёт" Height="30" Margin="0, 5, 0, 0" FontSize="14" Background="OrangeRed" FontWeight="Normal"/>
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
     </Grid>
 </Window>

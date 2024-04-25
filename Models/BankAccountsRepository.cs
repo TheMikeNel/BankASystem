@@ -1,22 +1,21 @@
 ﻿using BankASystem.Services;
-using System.Collections.Generic;
 
 namespace BankASystem.Models
 {
     public static class BankAccountsRepository
     {
         private static string _xmlPath = "AccountsStorage";
-        private static Serializer<SerializableDictionary<int, BankAccount<int>>> _serializer = new Serializer<SerializableDictionary<int, BankAccount<int>>>();
+        private static Serializer<SerializableDictionary<int, BankAccount<AccountID>>> _serializer = new Serializer<SerializableDictionary<int, BankAccount<AccountID>>>();
 
-        private static SerializableDictionary<int, BankAccount<int>> _accounts;
-        public static SerializableDictionary<int, BankAccount<int>> Accounts
+        private static SerializableDictionary<int, BankAccount<AccountID>> _accounts;
+        public static SerializableDictionary<int, BankAccount<AccountID>> Accounts
         {
             get
             {
                 if (_accounts == null)
                 {
                     if (!_serializer.TryDeserializeData(out _accounts, _xmlPath) || _accounts == null)
-                       _accounts = new SerializableDictionary<int, BankAccount<int>>();
+                       _accounts = new SerializableDictionary<int, BankAccount<AccountID>>();
                 }
                 return _accounts;
             }
@@ -24,40 +23,45 @@ namespace BankASystem.Models
             private set { _accounts = value; }
         }
 
-        public static bool OpenNonDepositAccount(int id, Client owner, double initialBalance)
+        public static AccountID GetFreeID()
         {
-            BankAccount<int> account = new NonDepositAccount<int>(id, owner, initialBalance);
-            if (owner.AddNewBankAccount(account))
+            return new AccountID(Accounts.Count + 1);
+        }
+
+        public static bool OpenNonDepositAccount(AccountID id, Client owner, float initialBalance)
+        {
+            BankAccount<AccountID> account = new NonDepositAccount<AccountID>(id, owner, initialBalance);
+            if (!Accounts.ContainsKey(id.IntID) && owner.AddNewBankAccount(account))
             {
-                Accounts.Add(id, account);
+                Accounts.Add(id.IntID, account);
                 return true;
             }
             return false;          
         }
 
-        public static bool OpenDepositAccount(int id, Client owner, double initialBalance, float interestRate)
+        public static bool OpenDepositAccount(AccountID id, Client owner, float initialBalance, float interestRate, string interestPeriod)
         {
-            BankAccount<int> account = new DepositAccount<int>(id, owner, initialBalance, interestRate);
-            if (owner.AddNewBankAccount(account))
+            BankAccount<AccountID> account = new DepositAccount<AccountID>(id, owner, initialBalance, interestRate, interestPeriod);
+            if (!Accounts.ContainsKey(id.IntID) && owner.AddNewBankAccount(account))
             {
-                Accounts.Add(id, account);
+                Accounts.Add(id.IntID, account);
                 return true;
             }
             return false;
         }
 
-        public static bool Transfer(ITransferable<IAccount<int>> fromAccount, IAccount<int> toAccount, double amount)
+        public static bool Transfer(ITransferable<IAccount<AccountID>> fromAccount, IAccount<AccountID> toAccount, float amount)
         {
             return fromAccount.SendTransfer(toAccount, amount);
         }
 
-        public static BankAccount<int> GetAccountByID(int id)
+        public static BankAccount<AccountID> GetAccountByID(int id)
         {
-            if (Accounts.ContainsKey(id)) return Accounts[id];
+            if (HasAccountID(id)) return Accounts[id];
             else return null;
         }
 
-        public static bool HasAccountByID(int id)
+        public static bool HasAccountID(int id)
         {
             return Accounts.ContainsKey(id);
         }

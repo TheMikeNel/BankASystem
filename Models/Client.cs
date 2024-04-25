@@ -15,45 +15,45 @@ namespace BankASystem.Models
         private string _phoneNumber;
         private string _passport;
 
-        [XmlElement("DepositAccount")]
+        [XmlElement("DepositAccountID")]
         public int DepositAccountSerialization
         {
             get
-            { 
-                if (DepositAccount != null) return DepositAccount.ID;
+            {
+                if (DepositAccount != null) return DepositAccount.ID.IntID;
                 else return -1;
             }
             set
             {
-                if (value > -1 && BankAccountsRepository.HasAccountByID(value))
+                if (value > -1 && BankAccountsRepository.HasAccountID(value))
                 {
-                    BankAccount<int> account = BankAccountsRepository.GetAccountByID(value);
-                    if (account is DepositAccount<int>) DepositAccount = (DepositAccount<int>)account;
+                    BankAccount<AccountID> account = BankAccountsRepository.GetAccountByID(value);
+                    if (account is DepositAccount<AccountID> DAccount) DepositAccount = DAccount;
                 }                 
             }
         }
         [XmlIgnore]
-        public DepositAccount<int> DepositAccount { get; private set; }
+        public DepositAccount<AccountID> DepositAccount { get; private set; }
 
-        [XmlElement("NonDepositAccount")]
+        [XmlElement("NonDepositAccountID")]
         public int NonDepositAccountSerialization
         {
             get
             {
-                if (NonDepositAccount != null) return NonDepositAccount.ID;
+                if (NonDepositAccount != null) return NonDepositAccount.ID.IntID;
                 else return -1;
             }
             set
             {
-                if (value > -1 && BankAccountsRepository.HasAccountByID(value))
+                if (value > -1 && BankAccountsRepository.HasAccountID(value))
                 {
-                    BankAccount<int> account = BankAccountsRepository.GetAccountByID(value);
-                    if (account is NonDepositAccount<int>) NonDepositAccount = (NonDepositAccount<int>)account;
+                    BankAccount<AccountID> account = BankAccountsRepository.GetAccountByID(value);
+                    if (account is NonDepositAccount<AccountID> NAccount) NonDepositAccount = NAccount;
                 }
             }
         }
         [XmlIgnore]
-        public NonDepositAccount<int> NonDepositAccount { get; private set; }
+        public NonDepositAccount<AccountID> NonDepositAccount { get; private set; }
 
         public string FIO 
         {
@@ -147,18 +147,23 @@ namespace BankASystem.Models
             return ChangesHistory.Last().ToString();
         }
 
-        public bool AddNewBankAccount(IAccount<int> newAccount)
+        public bool CanAddNewBankAccount()
         {
-            if (newAccount != null)
+            return DepositAccount == null || NonDepositAccount == null;
+        }
+
+        public bool AddNewBankAccount(IAccount<AccountID> newAccount)
+        {
+            if (newAccount != null && CanAddNewBankAccount())
             {
-                if (newAccount is DepositAccount<int> && DepositAccount == null)
+                if (newAccount is DepositAccount<AccountID> DAccount && DepositAccount == null)
                 {
-                    DepositAccount = (DepositAccount<int>)newAccount;
+                    DepositAccount = DAccount;
                     return true;
                 }
-                else if (newAccount is NonDepositAccount<int> && NonDepositAccount == null)
+                else if (newAccount is NonDepositAccount<AccountID> NAccount && NonDepositAccount == null)
                 {
-                    NonDepositAccount = (NonDepositAccount<int>)newAccount;
+                    NonDepositAccount = NAccount;
                     return true;
                 }
             }
