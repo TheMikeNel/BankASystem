@@ -57,6 +57,8 @@
     </ApplicationDefinition>
     <Compile Include="Models\BankAccount.cs" />
     <Compile Include="Models\BankAccountsRepository.cs" />
+    <Compile Include="Models\DepositAccount.cs" />
+    <Compile Include="Models\NonDepositAccount.cs" />
     <Compile Include="Services\BooleanInverseConverter.cs" />
     <Compile Include="Services\PassportValueCodingConverter.cs" />
     <Compile Include="Services\RelayCommand.cs" />
@@ -64,6 +66,13 @@
     <Compile Include="Services\Serializer.cs" />
     <Compile Include="ViewModels\ViewModelAccounts.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="ViewModels\ViewModelTransfer.cs" />
+    <Compile Include="Views\TransactionsWindow.xaml.cs">
+      <DependentUpon>TransactionsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TransferWindow.xaml.cs">
+      <DependentUpon>TransferWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="Views\BankAccountWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -87,6 +96,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\PasswordWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TransactionsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TransferWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

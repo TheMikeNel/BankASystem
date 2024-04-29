@@ -7,11 +7,12 @@ using System.Text;
 using System.Windows;
 using BankASystem.Views;
 
-namespace BankASystem
+namespace BankASystem.ViewModels
 {
     public class ViewModelBase : INotifyPropertyChanged
     {
         #region Main Properties
+        public static Window AccountsWindow { get; private set; }
 
         private Manager empManager = new Manager("1111");
         internal static Employee Emp { get; private set; } = new Consultant(); // Используется в PassportValueCodingConverter
@@ -267,14 +268,13 @@ namespace BankASystem
         {
             get
             {
-                return SelectedClient != null;
+                return SelectedClient != null && !IsAddClient && !IsChangeClient;
             }
         }
-
         #endregion
 
-        #region Commands and Events
 
+        #region Commands and Events
         private RelayCommand _switchEmployee;
         public RelayCommand SwitchEmployee
         {
@@ -308,6 +308,7 @@ namespace BankASystem
                         IsChangeClient = true;
                         SwitchTextBoxesReadOnly(false);
                     }
+                    OnPropertyChanged(nameof(OpenBankAccountsState));
                 }));
             }
         }
@@ -332,6 +333,7 @@ namespace BankASystem
                         TBPassportText = "";
                         SwitchTextBoxesReadOnly(false);
                     }
+                    OnPropertyChanged(nameof(OpenBankAccountsState));
                 }));
             }
         }
@@ -371,8 +373,8 @@ namespace BankASystem
                 (_openBankAccountWindow = new RelayCommand(obj =>
                 {
                     ViewModelAccounts.CurrentClient = SelectedClient;
-                    BankAccountWindow accounts = new BankAccountWindow();
-                    accounts.ShowDialog();
+                    AccountsWindow = new BankAccountWindow();
+                    AccountsWindow.ShowDialog();
                 }));
             }
         }
@@ -382,11 +384,10 @@ namespace BankASystem
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
         #endregion
 
-        #region Methods
 
+        #region Methods
         public ViewModelBase()
         {
             ClientsCollection = Emp.GetAllClients();
@@ -441,7 +442,6 @@ namespace BankASystem
 
             IsAddClient = false;
             IsChangeClient = false;
-
             SwitchTextBoxesReadOnly(true);
         }
 

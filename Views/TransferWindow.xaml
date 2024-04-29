@@ -1,0 +1,110 @@
+﻿<Window x:Class="BankASystem.Views.TransferWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BankASystem.ViewModels"
+        mc:Ignorable="d"
+        Title="TransferWindow" Height="650" Width="400" ResizeMode="NoResize">
+    
+    <Window.DataContext>
+        <local:ViewModelTransfer/>
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.1*"/>
+            <RowDefinition Height="0.6*"/>
+            <RowDefinition Height="0.2*"/>
+            <RowDefinition Height="0.1*"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Grid.Row="0" Text="Перевести" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+
+        <StackPanel x:Name="MainPanel" Grid.Row="1">
+            
+            <GroupBox x:Name="FromAccount" Header="Со счёта">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.2*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="ID:" Margin="3, 0"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding FromID}" Margin="10, 0" FontWeight="SemiBold"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Баланс:" Margin="3, 0"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding FromBalance}" Margin="10, 0" FontWeight="SemiBold"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox x:Name="Amount" Header="Сумма" Margin="0, 10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="0.1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0" x:Name="AmountField" Text="{Binding AmountField}" Margin="5, 5"/>
+                    <TextBlock Grid.Column="1" Text="₽" VerticalAlignment="Center"/>
+
+                </Grid>
+            </GroupBox>
+            
+            <GroupBox x:Name="ToAccount" Header="На счёт">
+                <StackPanel x:Name="ToAccountPanel">
+
+                    <StackPanel x:Name="SelectedID" Orientation="Horizontal" Margin="0, 5">
+                        <TextBlock Text="ID:" Margin="10, 0, 20, 0"/>
+                        <TextBlock Text="{Binding ToID}" FontWeight="SemiBold" TextAlignment="Center" Width="265"/>
+                    </StackPanel>
+
+                    <Grid x:Name="SearchAccount">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.8*"/>
+                            <ColumnDefinition Width="0.2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox x:Name="SearchField" Grid.Column="0" Text="{Binding SearchField, Mode=OneWayToSource}" TextAlignment="Center" MaxLength="20"/>
+                        <ComboBox x:Name="SearchType" Grid.Column="0" HorizontalAlignment="Left" Margin="3, 0" Width="40" SelectedIndex="{Binding SelectedSearchType, Mode=OneWayToSource}">
+                            <TextBlock Text="ID"/>
+                            <TextBlock Text="ФИО"/>
+                        </ComboBox>
+
+                        <Button Grid.Column="1" Content="Искать" Command="{Binding SearchCommand}"/>
+                    </Grid>
+
+                    <ListView x:Name="FilteredAccountsList" SelectedItem="{Binding SelectedAccount}" ItemsSource="{Binding FilteredAccounts, Mode=OneWay}" Height="150">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Path=ID}" Width="200"/>
+                                <GridViewColumn Header="Владелец" DisplayMemberBinding="{Binding Path=Owner.FIO}" Width="185"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </StackPanel>
+            </GroupBox>
+            
+        </StackPanel>
+
+        <GroupBox Grid.Row="2" Header="Сообщение">
+            <TextBox Text="{Binding Message}"/>
+        </GroupBox>
+
+        <Grid Grid.Row="3" x:Name="ButtonsGrid" Margin="2,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="Подтвердить" Command="{Binding ApplyTransfer}" Background="LightGreen" Margin="5, 0"/>
+            <Button Grid.Column="1" Content="Отмена" Command="{Binding CancelTransfer}" Margin="5, 0"/>
+
+        </Grid>
+    </Grid>
+</Window>

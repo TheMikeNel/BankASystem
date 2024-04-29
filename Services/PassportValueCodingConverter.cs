@@ -11,7 +11,7 @@ namespace BankASystem.Services
         {
             if (value is string)
             {
-                return ViewModelBase.Emp is Manager ? value : "**** ******";
+                return ViewModels.ViewModelBase.Emp is Manager ? value : "**** ******";
             }
             return value;
         }

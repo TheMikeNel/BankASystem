@@ -5,14 +5,17 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Windows;
 
-namespace BankASystem
+namespace BankASystem.ViewModels
 {
     public class ViewModelAccounts : INotifyPropertyChanged
     {
         private bool _isOpening = false;
+
+        public static Window TransferWindow { get; private set; }
+
+        public static Window TransactionsWindow { get; private set; }
 
         public static Client CurrentClient { get; set; }
 
@@ -25,6 +28,9 @@ namespace BankASystem
             }
         }
 
+        public static string AccountIDForTransactionsShown { get; private set; }
+
+        public static ObservableCollection<OperationData> Transactions { get; private set; }
 
         #region Available Accounts 
         public string DepositAccountID
@@ -33,7 +39,7 @@ namespace BankASystem
             {
                 if (CurrentClient != null && CurrentClient.DepositAccount != null)
                 {
-                    return CurrentClient.DepositAccount.ID.ToString();
+                    return BankAccountsRepository.IntToStringID(CurrentClient.DepositAccount.ID);
                 }
                 else return "NoN";
             }
@@ -45,7 +51,7 @@ namespace BankASystem
             {
                 if (CurrentClient != null && CurrentClient.DepositAccount != null)
                 {
-                    return CurrentClient.DepositAccount.Balance.ToString();
+                    return CurrentClient.DepositAccount.Balance.ToString("#.##");
                 }
                 else return "NoN";
             }
@@ -57,7 +63,7 @@ namespace BankASystem
             {
                 if (CurrentClient != null && CurrentClient.DepositAccount != null)
                 {
-                    return CurrentClient.DepositAccount.InterestRate.ToString();
+                    return CurrentClient.DepositAccount.InterestRate.ToString("#.##");
                 }
                 else return "NoN";
             }
@@ -81,7 +87,7 @@ namespace BankASystem
             {
                 if (CurrentClient != null && CurrentClient.NonDepositAccount != null)
                 {
-                    return CurrentClient.NonDepositAccount.ID.ToString();
+                    return BankAccountsRepository.IntToStringID(CurrentClient.NonDepositAccount.ID);
                 }
                 else return "NoN";
             }
@@ -93,7 +99,7 @@ namespace BankASystem
             {
                 if (CurrentClient != null && CurrentClient.NonDepositAccount != null)
                 {
-                    return CurrentClient.NonDepositAccount.Balance.ToString();
+                    return CurrentClient.NonDepositAccount.Balance.ToString("#.##");
                 }
                 else return "NoN";
             }
@@ -102,17 +108,17 @@ namespace BankASystem
 
 
         #region Create New Account Properties
-        private AccountID _newAccountID;
+        private int _newAccountID;
         public string NewAccountID
         {
             get          
             { 
-                _newAccountID = BankAccountsRepository.GetFreeID();
-                return _newAccountID.ToString();
+                _newAccountID = BankAccountsRepository.FreeID;
+                return BankAccountsRepository.IntToStringID(_newAccountID);
             }
         }
 
-        private AccountType _accountType = AccountType.None;
+        private AccountType _accountType = AccountType.NonDeposit;
         public int AccountTypeIndex 
         {
             get => (int)_accountType;
@@ -136,7 +142,7 @@ namespace BankASystem
         private float _startBalance = 0f;
         public string StartBalance
         {
-            get => _startBalance.ToString();
+            get => _startBalance.ToString("#.##");
             set
             {
                 if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double temp))
@@ -150,7 +156,7 @@ namespace BankASystem
         private float _writeInterestRate = 0f;
         public string WriteInterestRate
         {
-            get => _writeInterestRate.ToString();
+            get => _writeInterestRate.ToString("#.##");
             set
             {
                 if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float temp))
@@ -220,12 +226,9 @@ namespace BankASystem
                 {
                     if (TryCreateAccount())
                     {
-                        _isOpening = false;
-                        WriteAccountPanelState = Visibility.Collapsed;
                         ResetWritePanel();
                         UpdateAccountsPanel();
-                        OnPropertyChanged(nameof(WriteAccountPanelState));
-                        OnPropertyChanged(nameof(OpenNewAccountButtonState));
+                        MessageBox.Show("Новый аккаунт успешно создан!");
                     }
                     else
                     {
@@ -242,18 +245,148 @@ namespace BankASystem
             {
                 return _openNewAccountCancel ?? (_openNewAccountCancel = new RelayCommand(obj =>
                 {
-                    _isOpening = false;
-                    WriteAccountPanelState = Visibility.Collapsed;
-                    OnPropertyChanged(nameof(WriteAccountPanelState));
-                    OnPropertyChanged(nameof(OpenNewAccountButtonState));
+                    ResetWritePanel();
                 }));
             }
         }
         #endregion
 
+        private RelayCommand _addInterest;
+        public RelayCommand AddInterest
+        {
+            get
+            {
+                return _addInterest ?? (_addInterest = new RelayCommand(obj =>
+                {
+                    if (CurrentClient != null && CurrentClient.DepositAccount != null)
+                    {
+                        CurrentClient.DepositAccount.AddInterest();
+                        UpdateAccountsPanel();
+                    }
+                }));
+            }
+        }
+
+        private RelayCommand _accountTransactions;
+        public RelayCommand AccountTransactions
+        {
+            get => _accountTransactions ?? (_accountTransactions = new RelayCommand(ExecuteAccountTransactions));
+        }
+
+        private RelayCommand _closeTransactions;
+        public RelayCommand CloseTransactions
+        {
+            get => _closeTransactions ?? (_closeTransactions = new RelayCommand(obj => TransactionsWindow.Close()));
+        }
+
+        private RelayCommand _goToTransfer;
+        public RelayCommand GoToTransfer
+        {
+            get
+            {
+                return _goToTransfer ?? (_goToTransfer = new RelayCommand(ExecuteTransfer));
+            }
+        }
+
+        private RelayCommand _closeAccountWindow;
+        public RelayCommand CloseAccountWindow
+        {
+            get
+            {
+                return _closeAccountWindow ?? (_closeAccountWindow = new RelayCommand(obj =>
+                {
+                    ResetWritePanel();
+                    ViewModelBase.AccountsWindow.Close();
+                }));
+            }
+        }
+
+        private RelayCommand _deleteAccount;
+        public RelayCommand DeleteAccount
+        {
+            get
+            {
+                return _deleteAccount ?? (_deleteAccount = new RelayCommand(ExecuteDeleteAccount));
+            }
+        }
+
+        private void ExecuteAccountTransactions(object parameter)
+        {
+            if (TryParseCommandParameter(parameter, out int accType) && CurrentClient != null)
+            {
+                if (accType == (int)AccountType.Deposit && CurrentClient.DepositAccount != null)
+                {
+                    AccountIDForTransactionsShown = BankAccountsRepository.IntToStringID(CurrentClient.DepositAccount.ID);
+                    Transactions = new ObservableCollection<OperationData>(CurrentClient.DepositAccount.GetOperationsData());
+                }
+                else if (accType == (int)AccountType.NonDeposit && CurrentClient.NonDepositAccount != null)
+                {
+                    AccountIDForTransactionsShown = BankAccountsRepository.IntToStringID(CurrentClient.NonDepositAccount.ID);
+                    Transactions = new ObservableCollection<OperationData>(CurrentClient.NonDepositAccount.GetOperationsData());
+                }
+                else return;
+
+                TransactionsWindow = new Views.TransactionsWindow();
+                TransactionsWindow.ShowDialog();
+                OnPropertyChanged(nameof(AccountIDForTransactionsShown));
+                OnPropertyChanged(nameof(Transactions));
+            }
+        }
+
+        private void ExecuteTransfer(object parameter)
+        {
+            if (TryParseCommandParameter(parameter, out int accType) && CurrentClient != null)
+            {
+
+                if (accType == (int)AccountType.Deposit)
+                {
+                    ViewModelTransfer.FromAccount = CurrentClient.DepositAccount;
+                }
+                else if (accType == 1)
+                {
+                    ViewModelTransfer.FromAccount = CurrentClient.NonDepositAccount;
+                }
+                else return;
+
+                TransferWindow = new Views.TransferWindow();
+                bool? isClose = TransferWindow.ShowDialog();
+                if (!isClose != null) UpdateAccountsPanel();
+            }
+        }
+
+        private void ExecuteDeleteAccount(object parameter)
+        {
+            if (TryParseCommandParameter(parameter, out int accType))
+            {
+                if (MessageBox.Show("Вы уверены, что хотите удалить выбранный счёт?", "Удаление счёта",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    if (!TryDeleteAccount(accType))
+                        MessageBox.Show("Не удалось удалить счёт, так как на счету есть деньги!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    UpdateAccountsPanel();
+                }
+            }
+        }
+
+        private bool TryDeleteAccount(int accountType)
+        {
+            if (accountType == 0 && CurrentClient.DepositAccount != null && CurrentClient.DepositAccount.Balance == 0)
+            {
+                BankAccountsRepository.CloseAccount(CurrentClient, AccountType.Deposit);
+                return true;
+            }
+            else if (accountType == 1 && CurrentClient.NonDepositAccount != null && CurrentClient.NonDepositAccount.Balance == 0)
+            {
+                BankAccountsRepository.CloseAccount(CurrentClient, AccountType.NonDeposit);
+                return true;
+            }
+            return false;
+        }
+
         private bool TryCreateAccount()
         {
-            if (CurrentClient == null) return false;
+            if (CurrentClient == null || _accountType == AccountType.None) return false;
 
             bool typeError = (CurrentClient.DepositAccount != null && _accountType == AccountType.Deposit)
                 || (CurrentClient.NonDepositAccount != null && _accountType == AccountType.NonDeposit);
@@ -265,19 +398,32 @@ namespace BankASystem
             {
                 if (_accountType == AccountType.Deposit)
                 {                   
-                    isError = !BankAccountsRepository.OpenDepositAccount(_newAccountID, CurrentClient, _startBalance, _writeInterestRate, _writeInterestPeriod);
+                    isError = !BankAccountsRepository.OpenDepositAccount(CurrentClient, _startBalance, _writeInterestRate, _writeInterestPeriod);
                 }
                 else if (_accountType == AccountType.NonDeposit)
                 {
-                    isError = !BankAccountsRepository.OpenNonDepositAccount(_newAccountID, CurrentClient, _startBalance);
+                    isError = !BankAccountsRepository.OpenNonDepositAccount(CurrentClient, _startBalance);
                 }
             }
-
             return !(typeError || isError);
+        }
+
+
+        private bool TryParseCommandParameter(object parameter, out int outInt)
+        {
+            if (parameter != null && parameter is string paramStr && int.TryParse(paramStr, out outInt)) 
+                return true;
+
+            outInt = default;
+            return false;
         }
 
         private void ResetWritePanel()
         {
+            _isOpening = false;
+            WriteAccountPanelState = Visibility.Collapsed;
+            OnPropertyChanged(nameof(WriteAccountPanelState));
+            OnPropertyChanged(nameof(OpenNewAccountButtonState));
             OnPropertyChanged(nameof(NewAccountID));
             StartBalance = "0";
             WriteInterestRate = "0";
@@ -301,8 +447,6 @@ namespace BankASystem
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        
+        }       
     }
 }

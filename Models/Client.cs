@@ -20,40 +20,46 @@ namespace BankASystem.Models
         {
             get
             {
-                if (DepositAccount != null) return DepositAccount.ID.IntID;
+                if (DepositAccount != null) return DepositAccount.ID;
                 else return -1;
             }
             set
             {
-                if (value > -1 && BankAccountsRepository.HasAccountID(value))
+                if (value > -1)
                 {
-                    BankAccount<AccountID> account = BankAccountsRepository.GetAccountByID(value);
-                    if (account is DepositAccount<AccountID> DAccount) DepositAccount = DAccount;
+                    if (BankAccountsRepository.HasAccountID(value))
+                    {
+                        BankAccount<int> account = BankAccountsRepository.GetAccountByID(value);
+                        if (account is DepositAccount<int> DAccount) DepositAccount = DAccount;
+                    }
                 }                 
             }
         }
         [XmlIgnore]
-        public DepositAccount<AccountID> DepositAccount { get; private set; }
+        public DepositAccount<int> DepositAccount { get; private set; }
 
         [XmlElement("NonDepositAccountID")]
         public int NonDepositAccountSerialization
         {
             get
             {
-                if (NonDepositAccount != null) return NonDepositAccount.ID.IntID;
+                if (NonDepositAccount != null) return NonDepositAccount.ID;
                 else return -1;
             }
             set
             {
-                if (value > -1 && BankAccountsRepository.HasAccountID(value))
+                if (value > -1)
                 {
-                    BankAccount<AccountID> account = BankAccountsRepository.GetAccountByID(value);
-                    if (account is NonDepositAccount<AccountID> NAccount) NonDepositAccount = NAccount;
+                    if (BankAccountsRepository.HasAccountID(value))
+                    {
+                        BankAccount<int> account = BankAccountsRepository.GetAccountByID(value);
+                        if (account is NonDepositAccount<int> NAccount) NonDepositAccount = NAccount;
+                    }
                 }
             }
         }
         [XmlIgnore]
-        public NonDepositAccount<AccountID> NonDepositAccount { get; private set; }
+        public NonDepositAccount<int> NonDepositAccount { get; private set; }
 
         public string FIO 
         {
@@ -152,22 +158,46 @@ namespace BankASystem.Models
             return DepositAccount == null || NonDepositAccount == null;
         }
 
-        public bool AddNewBankAccount(IAccount<AccountID> newAccount)
+        public bool AddNewBankAccount(IAccount<int> newAccount)
         {
             if (newAccount != null && CanAddNewBankAccount())
             {
-                if (newAccount is DepositAccount<AccountID> DAccount && DepositAccount == null)
+                if (newAccount is DepositAccount<int> DAccount && DepositAccount == null)
                 {
                     DepositAccount = DAccount;
+                    AddChangesData(new ChangesData($"Привязан новый депозитный счёт.\nID: {BankAccountsRepository.IntToStringID(DepositAccount.ID)}" +
+                        $"\nСтавка: {DepositAccount.InterestRate:#.##} %; на период: {DepositAccount.InterestPeriod} мес."));
                     return true;
                 }
-                else if (newAccount is NonDepositAccount<AccountID> NAccount && NonDepositAccount == null)
+                else if (newAccount is NonDepositAccount<int> NAccount && NonDepositAccount == null)
                 {
                     NonDepositAccount = NAccount;
+                    AddChangesData(new ChangesData($"Привязан новый недепозитный счёт.\nID: {BankAccountsRepository.IntToStringID(NonDepositAccount.ID)}"));
                     return true;
                 }
             }
             return false;
+        }
+
+        public void CloseBankAccount(AccountType accountType)
+        {
+            if (accountType == AccountType.Deposit)
+            {
+                AddChangesData(new ChangesData($"Депозитный счёт ID: {BankAccountsRepository.IntToStringID(DepositAccount.ID)} удалён."));
+                DepositAccount = null;
+            }
+            else if (accountType == AccountType.NonDeposit)
+            {
+                AddChangesData(new ChangesData($"Недепозитный счёт ID: {BankAccountsRepository.IntToStringID(NonDepositAccount.ID)} удалён."));
+                NonDepositAccount = null;
+            }
+        }
+
+        public bool HasAccountByType(AccountType accountType)
+        {
+            if (accountType == AccountType.Deposit) return DepositAccount != null;
+            else if (accountType == AccountType.NonDeposit) return NonDepositAccount != null;
+            else return false;
         }
 
         public static bool CanCreateNewClient(string fio, string phone, string passport, out StringBuilder errors)
